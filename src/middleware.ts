@@ -7,12 +7,15 @@ export async function middleware(request: NextRequest) {
   const isDashboardRoute =
     pathname === "/dashboard" || pathname.startsWith("/dashboard/");
   const isLoginRoute = pathname === "/login";
+  const needsAuthCheck = isDashboardRoute || isLoginRoute;
 
   let session = null;
-  try {
-    session = await getAdminSessionFromRequest(request);
-  } catch (error) {
-    console.error("middleware session parse error:", error);
+  if (needsAuthCheck) {
+    try {
+      session = await getAdminSessionFromRequest(request);
+    } catch (error) {
+      console.error("middleware session parse error:", error);
+    }
   }
 
   if (isDashboardRoute && !session) {

@@ -43,12 +43,14 @@ async function loadHotels(activeOnly: boolean, siteOrigin = getSiteOrigin()) {
     }
   }
 
-  const localHotels = await readLocalHotels();
-  const filteredLocal = activeOnly
-    ? localHotels.filter((item) => item.status === "active")
-    : localHotels;
+  if (useLocalStorage()) {
+    const localHotels = await readLocalHotels();
+    const filteredLocal = activeOnly
+      ? localHotels.filter((item) => item.status === "active")
+      : localHotels;
 
-  hotels = mergeWithLocalById(hotels, filteredLocal);
+    hotels = mergeWithLocalById(hotels, filteredLocal);
+  }
 
   hotels.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 

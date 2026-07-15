@@ -47,18 +47,20 @@ export async function GET(request: Request) {
     const dropdownOnly = url.searchParams.get("dropdown") === "1";
 
     if (session) {
+      if (dropdownOnly) {
+        const records = await loadManagedDestinations(false);
+        const managedActive = records.filter((item) => item.status === "active");
+        return NextResponse.json({ options: managedRecordsToOptions(managedActive) });
+      }
+
       const aggregate = await buildDestinationAggregate({
         activeOnly: false,
         includeAllProducts: true,
       });
-      const records = await loadManagedDestinations(false);
+      const records = aggregate.managed;
       const managedActive = records.filter((item) => item.status === "active");
       const destinations = managedRecordsToDestinations(managedActive);
       const options = managedRecordsToOptions(managedActive);
-
-      if (dropdownOnly) {
-        return NextResponse.json({ options });
-      }
 
       return NextResponse.json({
         destinations,

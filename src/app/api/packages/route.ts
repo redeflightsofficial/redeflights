@@ -4,6 +4,7 @@ import {
   includesToText,
   parseIncludesInput,
   normalizePackageTitle,
+  buildPackageSlug,
   resolveUniquePackageSlug,
   validatePackageTitle,
 } from "@/lib/package-meta";
@@ -132,9 +133,13 @@ export async function POST(request: Request) {
     }
 
     const supabase = createAdminClient();
-    const { data: existingRows } = await supabase.from("tour_packages").select("slug, storage_path");
+    const baseSlug = buildPackageSlug(title);
+    const { data: existingRows } = await supabase
+      .from("tour_packages")
+      .select("slug, storage_path")
+      .like("slug", `${baseSlug}%`);
     const takenSlugs = new Set((existingRows || []).map((item) => String(item.slug)));
-    const slug = resolveUniquePackageSlug(input.title, takenSlugs);
+    const slug = resolveUniquePackageSlug(title, takenSlugs);
 
     let imageMeta: { image_url: string | null; storage_path: string | null };
     try {

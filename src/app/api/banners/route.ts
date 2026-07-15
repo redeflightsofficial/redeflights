@@ -22,11 +22,6 @@ import { withQueryTimeout } from "@/lib/supabase-query";
 import type { Banner, BannerStatus } from "@/types/banner";
 
 async function loadBanners(activeOnly: boolean, siteOrigin = getSiteOrigin()) {
-  const localBanners = await readLocalBanners();
-  const filteredLocal = activeOnly
-    ? localBanners.filter((item) => item.status === "active")
-    : localBanners;
-
   let banners: Banner[] = [];
 
   if (hasSupabaseConfig()) {
@@ -51,7 +46,13 @@ async function loadBanners(activeOnly: boolean, siteOrigin = getSiteOrigin()) {
     }
   }
 
-  banners = mergeWithLocalById(banners, filteredLocal);
+  if (useLocalStorage()) {
+    const localBanners = await readLocalBanners();
+    const filteredLocal = activeOnly
+      ? localBanners.filter((item) => item.status === "active")
+      : localBanners;
+    banners = mergeWithLocalById(banners, filteredLocal);
+  }
 
   banners.sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),

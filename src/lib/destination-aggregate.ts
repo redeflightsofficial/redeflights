@@ -3,7 +3,7 @@ import { readLocalDestinations } from "@/lib/destination-local";
 import { readLocalHotels } from "@/lib/hotel-local";
 import { readLocalRoutes } from "@/lib/route-local";
 import { readLocalVisas } from "@/lib/visa-local";
-import { mergeWithLocalById } from "@/lib/storage-mode";
+import { mergeWithLocalById, useLocalStorage } from "@/lib/storage-mode";
 import { createAdminClient, hasSupabaseConfig, logSupabaseError } from "@/lib/supabase-admin";
 import { withQueryTimeout } from "@/lib/supabase-query";
 import { sanitizeSlug } from "@/lib/slug-utils";
@@ -93,9 +93,11 @@ async function loadFromTable<T extends { status: string; id: string }>(
     }
   }
 
-  const localItems = activeOnly
-    ? (await localReader()).filter((item) => item.status === "active")
-    : await localReader();
+  const localItems = useLocalStorage()
+    ? activeOnly
+      ? (await localReader()).filter((item) => item.status === "active")
+      : await localReader()
+    : [];
 
   return mergeWithLocalById(items, localItems);
 }
@@ -121,7 +123,7 @@ export async function loadManagedDestinations(activeOnly = false) {
     }
   }
 
-  const localRecords = await readLocalDestinations();
+  const localRecords = useLocalStorage() ? await readLocalDestinations() : [];
   const filteredLocal = activeOnly
     ? localRecords.filter((item) => item.status === "active")
     : localRecords;

@@ -1,4 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+let adminClient: SupabaseClient | null = null;
+let adminClientKey = "";
 
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -10,12 +13,19 @@ export function createAdminClient() {
     throw new Error("Missing Supabase configuration for server operations.");
   }
 
-  return createClient(url, key, {
+  const cacheKey = `${url}|${key}`;
+  if (adminClient && adminClientKey === cacheKey) {
+    return adminClient;
+  }
+
+  adminClient = createClient(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
   });
+  adminClientKey = cacheKey;
+  return adminClient;
 }
 
 export function hasSupabaseConfig() {

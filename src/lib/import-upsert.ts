@@ -1,7 +1,19 @@
 import { buildAirlineSeo } from "@/lib/airline-meta";
-import { findLocalAirlineByIata, insertLocalAirline, updateLocalAirline, deleteLocalAirline } from "@/lib/airline-local";
+import {
+  findLocalAirlineByIata,
+  insertLocalAirline,
+  updateLocalAirline,
+  deleteLocalAirline,
+  readLocalAirlines,
+} from "@/lib/airline-local";
 import { buildAirportSeo } from "@/lib/airport-meta";
-import { findLocalAirportByIata, insertLocalAirport, updateLocalAirport, deleteLocalAirport } from "@/lib/airport-local";
+import {
+  findLocalAirportByIata,
+  insertLocalAirport,
+  updateLocalAirport,
+  deleteLocalAirport,
+  readLocalAirports,
+} from "@/lib/airport-local";
 import { buildRouteSeo, routesMatchForDedup, buildRouteIdentityKey } from "@/lib/route-meta";
 import { deleteLocalRoute, findLocalRouteBySlug, insertLocalRoute, readLocalRoutes, updateLocalRoute } from "@/lib/route-local";
 import type { ParsedAirlineRow, ParsedAirportRow, ParsedRouteRow } from "@/lib/excel-import";
@@ -51,25 +63,48 @@ type StoredRouteMatch = {
   to_airport_code?: string | null;
 };
 
-async function findMatchingImportedRoutes(
-  supabase: SupabaseClient,
+type PrefetchedRoutes = {
+  bySlug: Map<string, StoredRouteMatch[]>;
+  byCityPair: Map<string, StoredRouteMatch[]>;
+};
+
+function cityPairKey(fromCity: string, toCity: string) {
+  return `${fromCity.trim().toLowerCase()}→${toCity.trim().toLowerCase()}`;
+}
+
+async function prefetchImportedRoutes(supabase: SupabaseClient): Promise<PrefetchedRoutes> {
+  const { data } = await supabase
+    .from("routes")
+    .select("id, slug, from_city, to_city, airline_name, from_airport_code, to_airport_code");
+
+  const bySlug = new Map<string, StoredRouteMatch[]>();
+  const byCityPair = new Map<string, StoredRouteMatch[]>();
+
+  for (const record of (data || []) as StoredRouteMatch[]) {
+    const slugList = bySlug.get(record.slug) || [];
+    slugList.push(record);
+    bySlug.set(record.slug, slugList);
+
+    const pair = cityPairKey(record.from_city, record.to_city);
+    const cityList = byCityPair.get(pair) || [];
+    cityList.push(record);
+    byCityPair.set(pair, cityList);
+  }
+
+  return { bySlug, byCityPair };
+}
+
+function findMatchingImportedRoutes(
+  cache: PrefetchedRoutes,
   row: ParsedRouteRow,
   slug: string,
 ) {
-  const { data: bySlug } = await supabase
-    .from("routes")
-    .select("id, slug, from_city, to_city, airline_name, from_airport_code, to_airport_code")
-    .eq("slug", slug);
-
-  const { data: byCities } = await supabase
-    .from("routes")
-    .select("id, slug, from_city, to_city, airline_name, from_airport_code, to_airport_code")
-    .ilike("from_city", row.from_city.trim())
-    .ilike("to_city", row.to_city.trim());
-
   const unique = new Map<string, StoredRouteMatch>();
-  for (const record of [...(bySlug || []), ...(byCities || [])]) {
-    unique.set(record.id, record as StoredRouteMatch);
+  for (const record of [
+    ...(cache.bySlug.get(slug) || []),
+    ...(cache.byCityPair.get(cityPairKey(row.from_city, row.to_city)) || []),
+  ]) {
+    unique.set(record.id, record);
   }
 
   return Array.from(unique.values()).filter((record) => routesMatchForDedup(record, row));
@@ -81,19 +116,38 @@ function bumpStats(stats: ImportUpsertStats, result: "inserted" | "updated" | "e
   else stats.errors += 1;
 }
 
+function chunkArray<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
 export async function upsertImportedAirline(
   supabase: SupabaseClient,
   row: ParsedAirlineRow,
   siteOrigin: string,
+  existingByCode?: Map<string, { id: string; country: string | null }>,
+  localByCode?: Map<string, Awaited<ReturnType<typeof findLocalAirlineByIata>>>,
 ): Promise<"inserted" | "updated" | "error"> {
   const iataCode = row.iata_code.trim().toUpperCase();
-  const { data: existing } = await supabase
-    .from("airlines")
-    .select("id, country")
-    .eq("iata_code", iataCode)
-    .maybeSingle();
+  let existing = existingByCode?.get(iataCode);
 
-  const localExisting = await findLocalAirlineByIata(iataCode);
+  if (!existing && !existingByCode) {
+    const { data } = await supabase
+      .from("airlines")
+      .select("id, country")
+      .eq("iata_code", iataCode)
+      .maybeSingle();
+    existing = data ?? undefined;
+  }
+
+  const localExisting = localByCode
+    ? localByCode.get(iataCode) || null
+    : useLocalStorage()
+      ? await findLocalAirlineByIata(iataCode)
+      : null;
   const resolvedCountry =
     row.country?.trim() || existing?.country || localExisting?.country || "";
   const seo = buildAirlineSeo(row.name, iataCode, resolvedCountry, siteOrigin);
@@ -149,15 +203,26 @@ export async function upsertImportedAirport(
   supabase: SupabaseClient,
   row: ParsedAirportRow,
   siteOrigin: string,
+  existingByCode?: Map<string, { id: string; country: string | null }>,
+  localByCode?: Map<string, Awaited<ReturnType<typeof findLocalAirportByIata>>>,
 ): Promise<"inserted" | "updated" | "error"> {
   const iataCode = row.iata_code.trim().toUpperCase();
-  const { data: existing } = await supabase
-    .from("airports")
-    .select("id, country")
-    .eq("iata_code", iataCode)
-    .maybeSingle();
+  let existing = existingByCode?.get(iataCode);
 
-  const localExisting = await findLocalAirportByIata(iataCode);
+  if (!existing && !existingByCode) {
+    const { data } = await supabase
+      .from("airports")
+      .select("id, country")
+      .eq("iata_code", iataCode)
+      .maybeSingle();
+    existing = data ?? undefined;
+  }
+
+  const localExisting = localByCode
+    ? localByCode.get(iataCode) || null
+    : useLocalStorage()
+      ? await findLocalAirportByIata(iataCode)
+      : null;
   const resolvedCountry =
     row.country?.trim() || existing?.country || localExisting?.country || "";
   const seo = buildAirportSeo(row.name, iataCode, row.city, resolvedCountry, siteOrigin);
@@ -213,6 +278,7 @@ export async function upsertImportedRoute(
   supabase: SupabaseClient,
   row: ParsedRouteRow,
   siteOrigin: string,
+  routeCache?: PrefetchedRoutes,
 ): Promise<"inserted" | "updated" | "error"> {
   const seo = buildRouteSeo(
     row.from_city,
@@ -239,14 +305,9 @@ export async function upsertImportedRoute(
     status: "active" as const,
   };
 
-  const { data: existing } = await supabase
-    .from("routes")
-    .select("id")
-    .eq("slug", seo.slug)
-    .maybeSingle();
-
-  const matches = await findMatchingImportedRoutes(supabase, row, seo.slug);
-  const primary = matches[0] ?? (existing ? { id: existing.id } : null);
+  const cache = routeCache || (await prefetchImportedRoutes(supabase));
+  const matches = findMatchingImportedRoutes(cache, row, seo.slug);
+  const primary = matches[0] ?? null;
 
   if (primary?.id) {
     const { error } = await supabase.from("routes").update(payload).eq("id", primary.id);
@@ -254,21 +315,48 @@ export async function upsertImportedRoute(
       for (const duplicate of matches.slice(1)) {
         await supabase.from("routes").delete().eq("id", duplicate.id);
         await safeLocalCleanup(() => deleteLocalRoute(duplicate.id));
+        for (const list of [
+          cache.bySlug.get(duplicate.slug),
+          cache.byCityPair.get(cityPairKey(duplicate.from_city, duplicate.to_city)),
+        ]) {
+          if (!list) continue;
+          const idx = list.findIndex((item) => item.id === duplicate.id);
+          if (idx >= 0) list.splice(idx, 1);
+        }
       }
-      const localDuplicate = await findLocalRouteBySlug(seo.slug);
-      if (localDuplicate && localDuplicate.id !== primary.id) {
-        await safeLocalCleanup(() => deleteLocalRoute(localDuplicate.id));
+      if (useLocalStorage()) {
+        const localDuplicate = await findLocalRouteBySlug(seo.slug);
+        if (localDuplicate && localDuplicate.id !== primary.id) {
+          await safeLocalCleanup(() => deleteLocalRoute(localDuplicate.id));
+        }
       }
+      Object.assign(primary, payload);
       return "updated";
     }
   } else {
-    const { error } = await supabase.from("routes").insert(payload);
-    if (!error) {
-      const localDuplicate = await findLocalRouteBySlug(seo.slug);
-      if (localDuplicate) await safeLocalCleanup(() => deleteLocalRoute(localDuplicate.id));
+    const { data, error } = await supabase
+      .from("routes")
+      .insert(payload)
+      .select("id, slug, from_city, to_city, airline_name, from_airport_code, to_airport_code")
+      .single();
+    if (!error && data) {
+      if (useLocalStorage()) {
+        const localDuplicate = await findLocalRouteBySlug(seo.slug);
+        if (localDuplicate) await safeLocalCleanup(() => deleteLocalRoute(localDuplicate.id));
+      }
+      const stored = data as StoredRouteMatch;
+      const slugList = cache.bySlug.get(stored.slug) || [];
+      slugList.push(stored);
+      cache.bySlug.set(stored.slug, slugList);
+      const pair = cityPairKey(stored.from_city, stored.to_city);
+      const cityList = cache.byCityPair.get(pair) || [];
+      cityList.push(stored);
+      cache.byCityPair.set(pair, cityList);
       return "inserted";
     }
   }
+
+  if (!useLocalStorage()) return "error";
 
   const localRoutes = await readLocalRoutes();
   const localMatches = localRoutes.filter((record) => routesMatchForDedup(record, row));
@@ -286,16 +374,12 @@ export async function upsertImportedRoute(
     }
   }
 
-  if (useLocalStorage()) {
-    try {
-      await insertLocalRoute(payload);
-      return "inserted";
-    } catch {
-      return "error";
-    }
+  try {
+    await insertLocalRoute(payload);
+    return "inserted";
+  } catch {
+    return "error";
   }
-
-  return "error";
 }
 
 export async function upsertImportedAirlines(
@@ -305,9 +389,29 @@ export async function upsertImportedAirlines(
 ): Promise<ImportUpsertStats> {
   const stats: ImportUpsertStats = { inserted: 0, updated: 0, errors: 0 };
   const deduped = dedupeByKey(rows, (row) => row.iata_code);
+  const codes = deduped.map((row) => row.iata_code.trim().toUpperCase()).filter(Boolean);
+
+  const existingByCode = new Map<string, { id: string; country: string | null }>();
+  for (const chunk of chunkArray(codes, 200)) {
+    if (chunk.length === 0) continue;
+    const { data } = await supabase.from("airlines").select("id, iata_code, country").in("iata_code", chunk);
+    for (const item of data || []) {
+      existingByCode.set(String(item.iata_code).toUpperCase(), {
+        id: item.id,
+        country: item.country ?? null,
+      });
+    }
+  }
+
+  const localByCode = new Map<string, NonNullable<Awaited<ReturnType<typeof findLocalAirlineByIata>>>>();
+  if (useLocalStorage()) {
+    for (const item of await readLocalAirlines()) {
+      localByCode.set(item.iata_code.toUpperCase(), item);
+    }
+  }
 
   for (const row of deduped) {
-    const result = await upsertImportedAirline(supabase, row, siteOrigin);
+    const result = await upsertImportedAirline(supabase, row, siteOrigin, existingByCode, localByCode);
     bumpStats(stats, result);
   }
 
@@ -321,9 +425,29 @@ export async function upsertImportedAirports(
 ): Promise<ImportUpsertStats> {
   const stats: ImportUpsertStats = { inserted: 0, updated: 0, errors: 0 };
   const deduped = dedupeByKey(rows, (row) => row.iata_code);
+  const codes = deduped.map((row) => row.iata_code.trim().toUpperCase()).filter(Boolean);
+
+  const existingByCode = new Map<string, { id: string; country: string | null }>();
+  for (const chunk of chunkArray(codes, 200)) {
+    if (chunk.length === 0) continue;
+    const { data } = await supabase.from("airports").select("id, iata_code, country").in("iata_code", chunk);
+    for (const item of data || []) {
+      existingByCode.set(String(item.iata_code).toUpperCase(), {
+        id: item.id,
+        country: item.country ?? null,
+      });
+    }
+  }
+
+  const localByCode = new Map<string, NonNullable<Awaited<ReturnType<typeof findLocalAirportByIata>>>>();
+  if (useLocalStorage()) {
+    for (const item of await readLocalAirports()) {
+      localByCode.set(item.iata_code.toUpperCase(), item);
+    }
+  }
 
   for (const row of deduped) {
-    const result = await upsertImportedAirport(supabase, row, siteOrigin);
+    const result = await upsertImportedAirport(supabase, row, siteOrigin, existingByCode, localByCode);
     bumpStats(stats, result);
   }
 
@@ -337,9 +461,10 @@ export async function upsertImportedRoutes(
 ): Promise<ImportUpsertStats> {
   const stats: ImportUpsertStats = { inserted: 0, updated: 0, errors: 0 };
   const deduped = dedupeRoutesBySlug(rows);
+  const routeCache = await prefetchImportedRoutes(supabase);
 
   for (const row of deduped) {
-    const result = await upsertImportedRoute(supabase, row, siteOrigin);
+    const result = await upsertImportedRoute(supabase, row, siteOrigin, routeCache);
     bumpStats(stats, result);
   }
 

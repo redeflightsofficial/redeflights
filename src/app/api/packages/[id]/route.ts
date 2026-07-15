@@ -3,6 +3,7 @@ import { getAdminSessionFromRequest } from "@/lib/auth-session";
 import {
   parseIncludesInput,
   normalizePackageTitle,
+  buildPackageSlug,
   resolveUniquePackageSlug,
   validatePackageTitle,
 } from "@/lib/package-meta";
@@ -81,7 +82,11 @@ export async function PATCH(
     }
 
     const supabase = createAdminClient();
-    const { data: existingRows } = await supabase.from("tour_packages").select("slug, storage_path");
+    const baseSlug = buildPackageSlug(title);
+    const { data: existingRows } = await supabase
+      .from("tour_packages")
+      .select("slug, storage_path")
+      .like("slug", `${baseSlug}%`);
     const takenSlugs = new Set(
       (existingRows || [])
         .filter((item) => item.slug !== existing.slug)

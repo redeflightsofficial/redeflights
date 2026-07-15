@@ -18,37 +18,45 @@ import { withQueryTimeout } from "@/lib/supabase-query";
 import type { Airline, EntityStatus } from "@/types/airline";
 
 async function loadAirlines(activeOnly: boolean, siteOrigin = getSiteOrigin()) {
-  await syncLocalAirlinesFromRoutes(siteOrigin);
-
-  const supabase = createAdminClient();
-  let query = supabase.from("airlines").select("*").order("created_at", { ascending: false });
-  if (activeOnly) query = query.eq("status", "active");
+  if (useLocalStorage()) {
+    await syncLocalAirlinesFromRoutes(siteOrigin);
+  }
 
   let airlines: Airline[] = [];
 
-  try {
-    const { data, error } = await withQueryTimeout(query, 5000, "airlines fetch");
-    airlines = (data ?? []) as Airline[];
-    if (error) {
+  if (hasSupabaseConfig()) {
+    try {
+      const supabase = createAdminClient();
+      let query = supabase.from("airlines").select("*").order("created_at", { ascending: false });
+      if (activeOnly) query = query.eq("status", "active");
+
+      const { data, error } = await withQueryTimeout(query, 5000, "airlines fetch");
+      airlines = (data ?? []) as Airline[];
+      if (error) {
+        console.error("airlines fetch error:", error);
+        airlines = [];
+      }
+    } catch (error) {
       console.error("airlines fetch error:", error);
       airlines = [];
     }
-  } catch (error) {
-    console.error("airlines fetch error:", error);
-    airlines = [];
   }
 
-  const localAirlines = await readLocalAirlines();
-  const filteredLocal = activeOnly
-    ? localAirlines.filter((item) => item.status === "active")
-    : localAirlines;
+  if (useLocalStorage()) {
+    const localAirlines = await readLocalAirlines();
+    const filteredLocal = activeOnly
+      ? localAirlines.filter((item) => item.status === "active")
+      : localAirlines;
 
-  airlines = mergeWithLocalByCode(airlines, filteredLocal);
+    airlines = mergeWithLocalByCode(airlines, filteredLocal);
+  }
 
   airlines.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-  const deletedCodes = new Set((await readDeletedAirlineCodes()).map((code) => code.toUpperCase()));
-  airlines = airlines.filter((item) => !deletedCodes.has(item.iata_code.toUpperCase()));
+  if (useLocalStorage()) {
+    const deletedCodes = new Set((await readDeletedAirlineCodes()).map((code) => code.toUpperCase()));
+    airlines = airlines.filter((item) => !deletedCodes.has(item.iata_code.toUpperCase()));
+  }
 
   return airlines.map((item) => {
     const seo = buildAirlineSeo(item.name, item.iata_code, item.country || "", siteOrigin);
@@ -122,18 +130,23 @@ export async function POST(request: Request) {
       status: (body.status === "pending" ? "pending" : "active") as EntityStatus,
     };
 
-    const supabase = createAdminClient();
-    const { data, error } = await supabase.from("airlines").insert(payload).select("*").single();
+    let storageError: unknown = null;
 
-    if (!error && data) {
-      return NextResponse.json({
-        success: true,
-        message: "Airline added with auto SEO and page URL.",
-        airline: data,
-      });
+    if (hasSupabaseConfig()) {
+      const supabase = createAdminClient();
+      const { data, error } = await supabase.from("airlines").insert(payload).select("*").single();
+
+      if (!error && data) {
+        return NextResponse.json({
+          success: true,
+          message: "Airline added with auto SEO and page URL.",
+          airline: data,
+        });
+      }
+
+      storageError = error;
+      console.error("airline insert error:", error);
     }
-
-    console.error("airline insert error:", error);
 
     if (useLocalStorage()) {
       const existing = await findLocalAirlineByIata(iataCode);
@@ -149,7 +162,7 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ error: formatStorageError(error) }, { status: 500 });
+    return NextResponse.json({ error: formatStorageError(storageError) }, { status: 500 });
   } catch (error) {
     console.error("airlines POST error:", error);
     return NextResponse.json({ error: "Unable to add airline." }, { status: 500 });
@@ -210,16 +223,30 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
 
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-      .from("airlines")
-      .update({ status: body.status })
-      .eq("id", body.id)
-      .select("*")
-      .single();
+    if (hasSupabaseConfig()) {
+      const supabase = createAdminClient();
+      const { data, error } = await supabase
+        .from("airlines")
+        .update({ status: body.status })
+        .eq("id", body.id)
+        .select("*")
+        .single();
 
-    if (!error && data) {
-      return NextResponse.json({ airline: data });
+      if (!error && data) {
+        return NextResponse.json({ airline: data });
+      }
+
+      if (useLocalStorage()) {
+        const localAirline = await updateLocalAirlineStatus(body.id, body.status);
+        if (!localAirline) {
+          return NextResponse.json({ error: "Airline not found." }, { status: 404 });
+        }
+
+        return NextResponse.json({ airline: localAirline });
+      }
+
+      console.error("airline status update error:", error);
+      return NextResponse.json({ error: formatStorageError(error) }, { status: 500 });
     }
 
     if (useLocalStorage()) {
@@ -231,8 +258,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ airline: localAirline });
     }
 
-    console.error("airline status update error:", error);
-    return NextResponse.json({ error: formatStorageError(error) }, { status: 500 });
+    return NextResponse.json({ error: "Unable to update airline." }, { status: 500 });
   } catch (error) {
     console.error("airlines PATCH error:", error);
     return NextResponse.json({ error: "Unable to update airline." }, { status: 500 });

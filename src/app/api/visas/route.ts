@@ -69,12 +69,14 @@ async function loadVisas(activeOnly: boolean, siteOrigin = getSiteOrigin()) {
     }
   }
 
-  const localVisas = await readLocalVisas();
-  const filteredLocal = activeOnly
-    ? localVisas.filter((item) => item.status === "active")
-    : localVisas;
+  if (useLocalStorage()) {
+    const localVisas = await readLocalVisas();
+    const filteredLocal = activeOnly
+      ? localVisas.filter((item) => item.status === "active")
+      : localVisas;
 
-  visas = mergeWithLocalById(visas, filteredLocal);
+    visas = mergeWithLocalById(visas, filteredLocal);
+  }
 
   visas.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 

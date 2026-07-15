@@ -4,6 +4,7 @@ import { readLocalBanners } from "@/lib/banner-local";
 import { readLocalDestinations } from "@/lib/destination-local";
 import { readLocalHotels } from "@/lib/hotel-local";
 import { readLocalRoutes } from "@/lib/route-local";
+import { useLocalStorage } from "@/lib/storage-mode";
 import { createAdminClient, hasSupabaseConfig, logSupabaseError } from "@/lib/supabase-admin";
 import { withQueryTimeout } from "@/lib/supabase-query";
 import { readLocalVisas } from "@/lib/visa-local";
@@ -46,6 +47,10 @@ async function loadFromTable<T extends Timestamped>(
   }
 }
 
+async function emptyLocal<T>(): Promise<T[]> {
+  return [];
+}
+
 function mergeById<T extends Timestamped>(remote: T[], local: T[]) {
   const seen = new Set(remote.map((item) => item.id));
   const merged = [...remote];
@@ -80,6 +85,8 @@ function toActivity(
 }
 
 export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
+  const includeLocal = useLocalStorage();
+
   const [
     enquiries,
     remoteRoutes,
@@ -107,27 +114,27 @@ export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
       "id,from_city,to_city,status,created_at",
       "routes",
     ),
-    readLocalRoutes(),
+    includeLocal ? readLocalRoutes() : emptyLocal<Route>(),
     loadFromTable<Airline>("airlines", "id,name,iata_code,status,created_at", "airlines"),
-    readLocalAirlines(),
+    includeLocal ? readLocalAirlines() : emptyLocal<Airline>(),
     loadFromTable<Airport>(
       "airports",
       "id,name,city,iata_code,status,created_at",
       "airports",
     ),
-    readLocalAirports(),
+    includeLocal ? readLocalAirports() : emptyLocal<Airport>(),
     loadFromTable<DestinationRecord>(
       "destinations",
       "id,title,country,status,created_at",
       "destinations",
     ),
-    readLocalDestinations(),
+    includeLocal ? readLocalDestinations() : emptyLocal<DestinationRecord>(),
     loadFromTable<Hotel>("hotels", "id,name,location,status,created_at", "hotels"),
-    readLocalHotels(),
+    includeLocal ? readLocalHotels() : emptyLocal<Hotel>(),
     loadFromTable<Visa>("visas", "id,country,visa_type,status,created_at", "visas"),
-    readLocalVisas(),
+    includeLocal ? readLocalVisas() : emptyLocal<Visa>(),
     loadFromTable<Banner>("banners", "id,alt,status,created_at", "banners"),
-    readLocalBanners(),
+    includeLocal ? readLocalBanners() : emptyLocal<Banner>(),
   ]);
 
   const routes = mergeById(remoteRoutes, localRoutes);

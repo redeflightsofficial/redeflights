@@ -34,12 +34,14 @@ async function loadRoutes(activeOnly: boolean, siteOrigin = getSiteOrigin()) {
     }
   }
 
-  const localRoutes = await readLocalRoutes();
-  const filteredLocal = activeOnly
-    ? localRoutes.filter((item) => item.status === "active")
-    : localRoutes;
+  if (useLocalStorage()) {
+    const localRoutes = await readLocalRoutes();
+    const filteredLocal = activeOnly
+      ? localRoutes.filter((item) => item.status === "active")
+      : localRoutes;
 
-  routes = mergeWithLocalById(routes, filteredLocal);
+    routes = mergeWithLocalById(routes, filteredLocal);
+  }
 
   routes.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
@@ -133,16 +135,23 @@ export async function POST(request: Request) {
       status: (body.status === "pending" ? "pending" : "active") as EntityStatus,
     };
 
-    const supabase = createAdminClient();
-    const { data, error } = await supabase.from("routes").insert(payload).select("*").single();
+    let storageError: unknown = null;
 
-    if (!error && data) {
-      await upsertLinkedEntities(payload, siteOrigin);
-      return NextResponse.json({
-        success: true,
-        message: "Route added with auto SEO. Airline & airports linked.",
-        route: data,
-      });
+    if (hasSupabaseConfig()) {
+      const supabase = createAdminClient();
+      const { data, error } = await supabase.from("routes").insert(payload).select("*").single();
+
+      if (!error && data) {
+        await upsertLinkedEntities(payload, siteOrigin);
+        return NextResponse.json({
+          success: true,
+          message: "Route added with auto SEO. Airline & airports linked.",
+          route: data,
+        });
+      }
+
+      storageError = error;
+      console.error("route insert error:", error);
     }
 
     if (useLocalStorage()) {
@@ -161,8 +170,7 @@ export async function POST(request: Request) {
       });
     }
 
-    console.error("route insert error:", error);
-    return NextResponse.json({ error: formatStorageError(error) }, { status: 500 });
+    return NextResponse.json({ error: formatStorageError(storageError) }, { status: 500 });
   } catch (error) {
     console.error("routes POST error:", error);
     return NextResponse.json({ error: "Unable to add route." }, { status: 500 });
@@ -219,16 +227,30 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Route id and status are required." }, { status: 400 });
     }
 
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-      .from("routes")
-      .update({ status: body.status })
-      .eq("id", body.id)
-      .select("*")
-      .single();
+    if (hasSupabaseConfig()) {
+      const supabase = createAdminClient();
+      const { data, error } = await supabase
+        .from("routes")
+        .update({ status: body.status })
+        .eq("id", body.id)
+        .select("*")
+        .single();
 
-    if (!error && data) {
-      return NextResponse.json({ route: data });
+      if (!error && data) {
+        return NextResponse.json({ route: data });
+      }
+
+      if (useLocalStorage()) {
+        const localRoute = await saveRouteById(body.id, { status: body.status });
+        if (!localRoute) {
+          return NextResponse.json({ error: "Route not found." }, { status: 404 });
+        }
+
+        return NextResponse.json({ route: localRoute });
+      }
+
+      console.error("route status update error:", error);
+      return NextResponse.json({ error: formatStorageError(error) }, { status: 500 });
     }
 
     if (useLocalStorage()) {
@@ -240,8 +262,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ route: localRoute });
     }
 
-    console.error("route status update error:", error);
-    return NextResponse.json({ error: formatStorageError(error) }, { status: 500 });
+    return NextResponse.json({ error: "Unable to update route." }, { status: 500 });
   } catch (error) {
     console.error("routes PATCH error:", error);
     return NextResponse.json({ error: "Unable to update route." }, { status: 500 });
