@@ -18,7 +18,15 @@ export function getAuthSecret() {
 }
 
 export function getAdminEmail() {
-  return (process.env.ADMIN_EMAIL || "yesr01164@gmail.com").trim().toLowerCase();
+  return (process.env.ADMIN_EMAIL || "hanifm24@gmail.com").trim().toLowerCase();
+}
+
+export function getAdminEmails() {
+  return [getAdminEmail()];
+}
+
+export function isAdminEmail(email: string) {
+  return email.trim().toLowerCase() === getAdminEmail();
 }
 
 export function decodePayload<T>(token: string): T | null {
@@ -48,6 +56,6 @@ export function validateSessionPayload(payload: SessionPayload | null) {
   if (!payload) return null;
   if (payload.exp < Date.now()) return null;
   if (payload.role !== "admin") return null;
-  if (payload.email !== getAdminEmail()) return null;
+  if (!isAdminEmail(payload.email)) return null;
   return payload;
 }

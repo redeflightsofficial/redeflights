@@ -5,6 +5,7 @@ import {
   getAdminEmail,
   getAuthSecret,
   getSessionTokenFromRequest,
+  isAdminEmail,
   OTP_COOKIE,
   type OtpPayload,
   SESSION_COOKIE,
@@ -25,7 +26,7 @@ function hashOtp(otp: string) {
   return createHmac("sha256", getAuthSecret()).update(otp).digest("hex");
 }
 
-export { getAdminEmail };
+export { getAdminEmail, isAdminEmail };
 
 export function generateOtpCode() {
   return String(randomInt(100000, 999999));

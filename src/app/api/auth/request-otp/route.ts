@@ -4,7 +4,7 @@ import {
   getAdminEmail,
   setOtpCookie,
 } from "@/lib/auth-session";
-import { buildOtpEmailPayload } from "@/lib/web3forms";
+import { sendOtpEmail } from "@/lib/send-otp-email";
 
 export async function POST(request: Request) {
   try {
@@ -25,19 +25,16 @@ export async function POST(request: Request) {
 
     const otp = generateOtpCode();
     await setOtpCookie(email, otp);
+    await sendOtpEmail(email, otp);
 
     return NextResponse.json({
       success: true,
-      message: "OTP sent to your admin email.",
-      emailPayload: buildOtpEmailPayload(otp),
+      message: `OTP sent to ${adminEmail}. Check inbox and spam.`,
     });
   } catch (error) {
     console.error("request-otp error:", error);
     const message =
-      error instanceof Error && error.message.includes("WEB3FORMS")
-        ? "Web3Forms is not configured. Add WEB3FORMS_ACCESS_KEY to .env.local."
-        : "Unable to send OTP right now. Please try again.";
-
+      error instanceof Error ? error.message : "Unable to send OTP right now. Please try again.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
