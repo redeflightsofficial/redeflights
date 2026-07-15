@@ -69,6 +69,9 @@ const tourPackageImageClass =
 const catalogLinkClass =
   "mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#e30613] transition hover:gap-2";
 
+const serviceImageClass =
+  "h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]";
+
 const services = [
   {
     title: "Flights",
@@ -90,9 +93,6 @@ const services = [
     href: "/visa",
     badge: "Expert Help",
     image: "/visa-flags.png",
-    imageWrapperClass: "flex min-h-[220px] items-center justify-center bg-sky-50 p-4 sm:min-h-[240px]",
-    imageClass:
-      "h-auto max-h-[200px] w-full object-contain object-center transition duration-500 group-hover:scale-[1.01] sm:max-h-[220px]",
   },
 ];
 
@@ -527,15 +527,13 @@ export default function Home() {
               transition={{ duration: 0.35, delay: index * 0.06 }}
               className="group"
             >
-              <div
-                className={`relative overflow-hidden rounded-xl ${item.imageWrapperClass ?? ""}`}
-              >
+              <div className="relative h-52 w-full overflow-hidden rounded-xl sm:h-56">
                 <Image
                   src={item.image}
                   alt={item.title}
                   width={640}
                   height={360}
-                  className={item.imageClass ?? catalogImageClass}
+                  className={serviceImageClass}
                 />
                 {item.badge ? <span className={imageBadgeClass}>{item.badge}</span> : null}
               </div>
