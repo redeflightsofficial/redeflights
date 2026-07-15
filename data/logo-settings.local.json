@@ -1,0 +1,14 @@
+{
+  "image_url": "/uploads/logo/site-logo.jpg",
+  "storage_path": "site-logo.jpg",
+  "use_image": true,
+  "show_tagline": true,
+  "mobile_height": 38,
+  "desktop_height": 48,
+  "hero_mobile_height": 56,
+  "hero_desktop_height": 76,
+  "mobile_text_scale": 100,
+  "desktop_text_scale": 100,
+  "updated_at": "2026-07-11T11:32:03.474Z",
+  "remove_image": true
+}

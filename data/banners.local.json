@@ -1,0 +1,74 @@
+[
+  {
+    "id": "f7bd078c-16d8-4609-91c2-ba657374eda1",
+    "alt": "Abudhabi to Mumbai Flights | REDE FLIGHTS",
+    "slug": "abudhabi-to-mumbai",
+    "seo_title": "Abudhabi to Mumbai Flights | REDE FLIGHTS",
+    "meta_description": "Book cheap flights from Abudhabi to Mumbai with REDE FLIGHTS.",
+    "h1_heading": "Abudhabi to Mumbai Flights",
+    "image_url": "http://localhost:3000/abudhabi-to-mumbai.jpg",
+    "storage_path": "abudhabi-to-mumbai.jpg",
+    "status": "active",
+    "created_at": "2026-07-12T13:02:21.639Z"
+  },
+  {
+    "id": "c6c19668-51d0-4908-8282-1c8b24ece7dd",
+    "alt": "Dubai to Kochi Flights | REDE FLIGHTS",
+    "slug": "dubai-to-kochi",
+    "seo_title": "Dubai to Kochi Flights | REDE FLIGHTS",
+    "meta_description": "Book cheap flights from Dubai to Kochi with REDE FLIGHTS.",
+    "h1_heading": "Dubai to Kochi Flights",
+    "image_url": "http://localhost:3000/dubai-to-kochi.jpg",
+    "storage_path": "dubai-to-kochi.jpg",
+    "status": "active",
+    "created_at": "2026-07-12T13:02:08.747Z"
+  },
+  {
+    "id": "0cf342c4-e9e2-4272-97ce-49d42be9170d",
+    "alt": "Dubai to Paris Flights | REDE FLIGHTS",
+    "slug": "dubai-to-paris",
+    "seo_title": "Dubai to Paris Flights | REDE FLIGHTS",
+    "meta_description": "Book cheap flights from Dubai to Paris with REDE FLIGHTS.",
+    "h1_heading": "Dubai to Paris Flights",
+    "image_url": "http://localhost:3000/dubai-to-paris.jpg",
+    "storage_path": "dubai-to-paris.jpg",
+    "status": "active",
+    "created_at": "2026-07-12T12:55:10.962Z"
+  },
+  {
+    "id": "3c3283f3-f880-4f6d-aa2c-f115157919e1",
+    "alt": "Abu Dhabi to London Flights | REDE FLIGHTS",
+    "slug": "abu-dhabi-to-london",
+    "seo_title": "Abu Dhabi to London Flights | REDE FLIGHTS",
+    "meta_description": "Book cheap flights from Abu Dhabi to London with REDE FLIGHTS.",
+    "h1_heading": "Abu Dhabi to London Flights",
+    "image_url": "http://localhost:3000/abu-dhabi-to-london.jpg",
+    "storage_path": "abu-dhabi-to-london.jpg",
+    "status": "active",
+    "created_at": "2026-07-11T17:14:22.309Z"
+  },
+  {
+    "id": "dceea7ae-d26f-46b3-a877-7e1859c83ad2",
+    "alt": "Dubai to Mangalore Flights | REDE FLIGHTS",
+    "slug": "dubai-to-mangalore",
+    "seo_title": "Dubai to Mangalore Flights | REDE FLIGHTS",
+    "meta_description": "Book cheap flights from Dubai to Mangalore with REDE FLIGHTS.",
+    "h1_heading": "Dubai to Mangalore Flights",
+    "image_url": "http://localhost:3000/dubai-to-mangalore.jpg",
+    "storage_path": "dubai-to-mangalore.jpg",
+    "status": "active",
+    "created_at": "2026-07-11T17:11:22.508Z"
+  },
+  {
+    "id": "a12643f0-0a0e-4aad-8a11-0c776612e1e4",
+    "alt": "Dubai to Nairobi Flights | REDE FLIGHTS",
+    "slug": "dubai-to-nairobi",
+    "seo_title": "Dubai to Nairobi Flights | REDE FLIGHTS",
+    "meta_description": "Book cheap flights from Dubai to Nairobi with REDE FLIGHTS.",
+    "h1_heading": "Dubai to Nairobi Flights",
+    "image_url": "http://localhost:3000/dubai-to-nairobi.jpg",
+    "storage_path": "dubai-to-nairobi.jpg",
+    "status": "active",
+    "created_at": "2026-07-11T11:32:27.473Z"
+  }
+]
