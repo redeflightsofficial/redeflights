@@ -36,6 +36,15 @@ export default function LoginPage() {
       const result = (await response.json()) as {
         error?: string;
         message?: string;
+        emailPayload?: {
+          access_key: string;
+          subject: string;
+          from_name: string;
+          name: string;
+          email: string;
+          message: string;
+          botcheck: string;
+        };
       };
 
       if (!response.ok) {
@@ -43,7 +52,21 @@ export default function LoginPage() {
         return false;
       }
 
-      setMessage(result.message || "OTP sent to your admin email.");
+      if (result.emailPayload) {
+        const { sendOtpEmailFromBrowser } = await import("@/lib/web3forms");
+        try {
+          await sendOtpEmailFromBrowser(result.emailPayload);
+        } catch (sendError) {
+          setError(
+            sendError instanceof Error
+              ? sendError.message
+              : "OTP was created but email could not be sent. Please try again.",
+          );
+          return false;
+        }
+      }
+
+      setMessage(result.message || "OTP sent. Check inbox and spam.");
       setStep("otp");
       return true;
     } catch {

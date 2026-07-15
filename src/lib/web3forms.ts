@@ -40,14 +40,15 @@ export async function sendOtpEmailFromBrowser(payload: OtpEmailPayload) {
     body: JSON.stringify(payload),
   });
 
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("application/json")) {
-    const text = await response.text();
-    console.error("Web3Forms non-JSON response:", text.slice(0, 200));
+  const raw = await response.text();
+  let result: { success?: boolean; message?: string } = {};
+
+  try {
+    result = JSON.parse(raw) as { success?: boolean; message?: string };
+  } catch {
+    console.error("Web3Forms non-JSON response:", raw.slice(0, 200));
     throw new Error("Email service returned an unexpected response. Please try again.");
   }
-
-  const result = (await response.json()) as { success?: boolean; message?: string };
 
   if (!response.ok || !result.success) {
     throw new Error(result.message || "Failed to send OTP email.");
