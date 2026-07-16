@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   description: homeMetadata.description,
   keywords: homeMetadata.keywords,
   openGraph: homeMetadata.openGraph,
+  verification: {
+    google: "HGRk4LcrPMnkMWI0CqPGhYMcCEXJ7GCPPbvvWLahnI4",
+  },
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",

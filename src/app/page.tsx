@@ -156,6 +156,11 @@ const reviews = [
     place: "Maldives Stay",
     text: "Premium feel from start to end. Transparent pricing and attentive support.",
   },
+  {
+    name: "Samina Iqbal",
+    place: "New York Flight",
+    text: "I booked my flight to New York. Very professional service — everything was confirmed within minutes.",
+  },
 ];
 
 export default function Home() {
