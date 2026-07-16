@@ -143,7 +143,7 @@ const steps = [
 const reviews = [
   {
     name: "Ayesha Khan",
-    place: "Dubai Trip",
+    place: "Bali Getaway",
     text: "Smooth booking and great hotel options. The team handled everything quickly.",
   },
   {

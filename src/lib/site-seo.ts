@@ -54,7 +54,7 @@ export const homeMetadata: Metadata = {
   openGraph: {
     title: SITE_BRAND,
     description:
-      "Book flights, hotels, visa services and holiday packages from Ajman, UAE with Redeflights.",
+      "Book flights, hotels, visa services and holiday packages with Redeflights.",
     type: "website",
     url: SITE_URL,
     siteName: SITE_BRAND,
@@ -63,7 +63,7 @@ export const homeMetadata: Metadata = {
     card: "summary_large_image",
     title: SITE_BRAND,
     description:
-      "Book flights, hotels, visa services and holiday packages from Ajman, UAE with Redeflights.",
+      "Book flights, hotels, visa services and holiday packages with Redeflights.",
   },
 };
 
