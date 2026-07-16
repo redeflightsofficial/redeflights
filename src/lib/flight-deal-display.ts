@@ -114,6 +114,7 @@ export type FlightSearchEnquiryInput = {
   departDate?: string;
   returnDate?: string;
   travelClass?: string;
+  /** Plain summary string or legacy codes like "1a" / "2a1c" */
   passengers?: string;
   airline?: string;
 };

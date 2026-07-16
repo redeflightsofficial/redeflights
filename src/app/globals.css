@@ -59,7 +59,8 @@ html.dark body {
 @media (max-width: 639px) {
   html,
   body {
-    overflow-x: hidden;
+    overflow-x: hidden !important;
+    max-width: 100vw;
     touch-action: pan-y;
   }
 
@@ -67,6 +68,13 @@ html.dark body {
   .content-page-hero,
   .hero-depth {
     overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  .hero-search-bar input,
+  .hero-search-bar select,
+  .hero-search-bar button {
+    max-width: 100%;
   }
 }
 

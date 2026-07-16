@@ -6,6 +6,12 @@ import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlightLocationAutocomplete } from "@/components/FlightLocationAutocomplete";
 import { BrandLogo } from "@/components/BrandLogo";
+import {
+  DEFAULT_PASSENGER_COUNTS,
+  formatPassengerSummary,
+  PassengerPicker,
+  type PassengerCounts,
+} from "@/components/PassengerPicker";
 import { SiteShell } from "@/components/SiteShell";
 import { SwapRoutesIcon, WhatsAppIcon } from "@/components/icons";
 import { WHATSAPP_URL } from "@/lib/contact";
@@ -28,29 +34,23 @@ const travelClassOptions = [
   { value: "first", label: "First" },
 ];
 
-const passengerOptions = [
-  { value: "1a", label: "1 Adult" },
-  { value: "2a", label: "2 Adults" },
-  { value: "1a1c", label: "1 Adult, 1 Child" },
-  { value: "2a1c", label: "2 Adults, 1 Child" },
-];
-
 const heroSearchLabelClass = "text-[11px] font-extrabold uppercase tracking-wide text-white/90";
 const heroSearchCellClass =
   "flex min-h-[56px] min-w-0 flex-col justify-center overflow-x-hidden border-b border-white/15 bg-white/10 px-3 py-2.5 sm:min-h-[82px] sm:border-r sm:border-b-0 sm:px-4 sm:py-3 lg:px-4 lg:last:border-r-0";
 const heroSearchDateCellClass =
   "flex min-h-[56px] min-w-0 flex-col justify-center border-b border-white/15 bg-white/10 px-3 py-2.5 sm:min-h-[82px] sm:border-r sm:border-b-0 sm:px-3.5 sm:pr-4 sm:py-3 lg:px-3.5 lg:pr-4";
-const heroSearchTravellerCellClass = heroSearchCellClass;
+const heroSearchTravellerCellClass =
+  "relative z-[30] flex min-h-[56px] min-w-0 flex-col justify-center overflow-visible border-b border-white/15 bg-white/10 px-3 py-2.5 sm:min-h-[82px] sm:border-r sm:border-b-0 sm:px-4 sm:py-3 lg:px-4 lg:last:border-r-0";
 const heroSearchSelectClass =
-  "hero-search-select w-full min-w-0 cursor-pointer rounded-md border border-white/25 bg-white px-2 py-1.5 pr-6 text-sm font-semibold text-[#0b2f57] outline-none sm:text-[15px]";
+  "hero-search-select w-full min-w-0 max-w-full cursor-pointer rounded-md border border-white/25 bg-white px-2 py-1.5 pr-6 text-base font-semibold text-[#0b2f57] outline-none sm:text-[15px]";
 const heroLocationInputClass =
-  "mt-0.5 w-full min-w-0 rounded-md border border-white/25 bg-white px-2.5 py-2 text-sm font-semibold text-[#0b2f57] outline-none placeholder:font-medium placeholder:text-slate-400 focus:border-white focus:ring-2 focus:ring-white/30 sm:mt-1 sm:text-[15px]";
+  "mt-0.5 w-full min-w-0 max-w-full rounded-md border border-white/25 bg-white px-2.5 py-2 text-base font-semibold text-[#0b2f57] outline-none placeholder:font-medium placeholder:text-slate-400 focus:border-white focus:ring-2 focus:ring-white/30 sm:mt-1 sm:text-[15px]";
 const heroSearchDateInputClass =
-  "hero-search-date mt-0.5 w-full min-w-0 rounded-md border border-white/25 bg-white px-2.5 py-2 pr-7 text-[14px] font-semibold leading-none text-[#0b2f57] outline-none disabled:opacity-45 sm:mt-1";
+  "hero-search-date mt-0.5 w-full min-w-0 max-w-full rounded-md border border-white/25 bg-white px-2.5 py-2 pr-7 text-base font-semibold leading-none text-[#0b2f57] outline-none disabled:opacity-45 sm:mt-1 sm:text-[14px]";
 const heroSearchBarClassOneWay =
-  "hero-search-bar grid w-full min-w-0 flex-1 grid-cols-1 overflow-x-hidden rounded-xl border border-white/20 bg-white/10 sm:grid-cols-2 lg:grid-cols-[minmax(260px,1.95fr)_minmax(118px,1.05fr)_minmax(0,1fr)_auto]";
+  "hero-search-bar grid w-full min-w-0 max-w-full flex-1 grid-cols-1 overflow-x-hidden rounded-xl border border-white/20 bg-white/10 sm:grid-cols-2 lg:grid-cols-[minmax(260px,1.95fr)_minmax(118px,1.05fr)_minmax(0,1fr)_auto]";
 const heroSearchBarClassReturn =
-  "hero-search-bar grid w-full min-w-0 flex-1 grid-cols-1 overflow-x-hidden rounded-xl border border-white/20 bg-white/10 sm:grid-cols-2 lg:grid-cols-[minmax(260px,1.95fr)_minmax(110px,0.95fr)_minmax(110px,0.95fr)_minmax(0,1fr)_auto]";
+  "hero-search-bar grid w-full min-w-0 max-w-full flex-1 grid-cols-1 overflow-x-hidden rounded-xl border border-white/20 bg-white/10 sm:grid-cols-2 lg:grid-cols-[minmax(260px,1.95fr)_minmax(110px,0.95fr)_minmax(110px,0.95fr)_minmax(0,1fr)_auto]";
 const heroSearchSubmitCellClass =
   "flex min-h-[56px] items-center justify-center border-b border-white/15 bg-white/10 px-3 py-3 sm:col-span-2 sm:border-b-0 lg:col-span-1 lg:min-h-[82px] lg:border-l lg:border-white/15 lg:px-4";
 
@@ -165,7 +165,7 @@ const reviews = [
 
 export default function Home() {
   const [travelClass, setTravelClass] = useState("economy");
-  const [passengers, setPassengers] = useState("1a");
+  const [passengers, setPassengers] = useState<PassengerCounts>(DEFAULT_PASSENGER_COUNTS);
   const [fromQuery, setFromQuery] = useState("");
   const [toQuery, setToQuery] = useState("");
   const [tripType, setTripType] = useState<"one-way" | "return">("one-way");
@@ -279,7 +279,7 @@ export default function Home() {
         <div className="relative z-[2] mx-auto flex w-full min-w-0 max-w-[1420px] flex-col gap-6 px-4 sm:gap-5 sm:px-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
           <div className="flex w-full min-w-0 flex-1 flex-col max-sm:mt-4 max-sm:px-1 sm:mt-0 sm:px-0 lg:max-w-none">
             <form
-              className="relative z-20 w-full min-w-0 space-y-3 overflow-x-hidden rounded-2xl bg-gradient-to-br from-[#a8000d] via-[#e30613] to-[#c40010] p-4 shadow-[0_20px_48px_rgba(179,0,15,0.35)] ring-1 ring-white/20 max-sm:mx-auto max-sm:max-w-full sm:space-y-0 sm:p-4"
+              className="relative z-20 w-full min-w-0 max-w-full space-y-3 overflow-x-hidden overflow-y-visible rounded-2xl bg-gradient-to-br from-[#a8000d] via-[#e30613] to-[#c40010] p-3 shadow-[0_20px_48px_rgba(179,0,15,0.35)] ring-1 ring-white/20 max-sm:mx-auto sm:space-y-0 sm:p-4"
               onSubmit={(e) => {
                 e.preventDefault();
                 const airline = findMatchingRouteAirline(routes, fromQuery, toQuery);
@@ -290,7 +290,7 @@ export default function Home() {
                   departDate,
                   returnDate: tripType === "return" ? returnDate : undefined,
                   travelClass,
-                  passengers,
+                  passengers: formatPassengerSummary(passengers),
                   airline,
                 });
               }}
@@ -409,17 +409,7 @@ export default function Home() {
                   <div className={heroSearchTravellerCellClass}>
                     <span className={heroSearchLabelClass}>Travellers &amp; class</span>
                     <div className="mt-1 grid min-w-0 grid-cols-2 gap-2 sm:mt-1.5 sm:grid-cols-1 sm:gap-1.5">
-                      <select
-                        value={passengers}
-                        onChange={(e) => setPassengers(e.target.value)}
-                        className={heroSearchSelectClass}
-                      >
-                        {passengerOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                      <PassengerPicker value={passengers} onChange={setPassengers} />
                       <select
                         value={travelClass}
                         onChange={(e) => setTravelClass(e.target.value)}

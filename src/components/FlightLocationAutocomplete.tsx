@@ -6,6 +6,7 @@ import {
   filterFlightLocations,
   type FlightLocationOption,
 } from "@/lib/flight-search-locations";
+import { clampMenuToViewport, lockBodyOverflowX } from "@/lib/overlay-position";
 
 type FlightLocationAutocompleteProps = {
   label: string;
@@ -19,7 +20,7 @@ type FlightLocationAutocompleteProps = {
 };
 
 const inputClass =
-  "min-h-[44px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-[#0b2f57] outline-none transition placeholder:text-slate-400 focus:border-[#0b2f57]/35 focus:ring-2 focus:ring-[#0b2f57]/10";
+  "min-h-[44px] w-full max-w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-base text-[#0b2f57] outline-none transition placeholder:text-slate-400 focus:border-[#0b2f57]/35 focus:ring-2 focus:ring-[#0b2f57]/10 sm:text-sm";
 
 type MenuPosition = {
   top?: number;
@@ -57,18 +58,24 @@ export function FlightLocationAutocomplete({
 
     const wrapperRect = wrapper.getBoundingClientRect();
     const inputRect = input.getBoundingClientRect();
-    const menuWidth = Math.min(Math.max(wrapperRect.width, 240), window.innerWidth - 16);
-    const menuHeight = Math.min(suggestions.length, 8) * 52 + 16;
+    const isMobile = window.innerWidth < 640;
+    const preferredWidth = isMobile
+      ? window.innerWidth - 16
+      : Math.max(wrapperRect.width, 240);
+    const { left, width } = clampMenuToViewport(
+      isMobile ? 8 : wrapperRect.left,
+      preferredWidth,
+      8,
+    );
+    const menuHeight = Math.min(Math.max(suggestions.length, 1), 8) * 52 + 16;
     const spaceBelow = window.innerHeight - inputRect.bottom;
     const openAbove = spaceBelow < menuHeight + 12 && inputRect.top > menuHeight + 12;
-    const maxLeft = window.innerWidth - menuWidth - 8;
-    const left = Math.max(8, Math.min(wrapperRect.left, maxLeft));
 
     setMenuPosition({
       top: openAbove ? undefined : inputRect.bottom + 6,
       bottom: openAbove ? window.innerHeight - inputRect.top + 8 : undefined,
       left,
-      width: menuWidth,
+      width,
     });
   };
 
@@ -83,14 +90,20 @@ export function FlightLocationAutocomplete({
     }
 
     updateMenuPosition();
+    const unlock = lockBodyOverflowX();
 
     const onReposition = () => updateMenuPosition();
     window.addEventListener("resize", onReposition);
     window.addEventListener("scroll", onReposition, true);
+    window.visualViewport?.addEventListener("resize", onReposition);
+    window.visualViewport?.addEventListener("scroll", onReposition);
 
     return () => {
+      unlock();
       window.removeEventListener("resize", onReposition);
       window.removeEventListener("scroll", onReposition, true);
+      window.visualViewport?.removeEventListener("resize", onReposition);
+      window.visualViewport?.removeEventListener("scroll", onReposition);
     };
   }, [open, suggestions.length, value]);
 
@@ -128,12 +141,17 @@ export function FlightLocationAutocomplete({
               bottom: menuPosition.bottom,
               left: menuPosition.left,
               width: menuPosition.width,
+              maxWidth: "calc(100vw - 16px)",
               zIndex: 99999,
             }}
-            className="rounded-xl border border-slate-200 bg-white shadow-[0_20px_44px_rgba(11,47,87,0.2)]"
+            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_20px_44px_rgba(11,47,87,0.2)]"
           >
             {suggestions.length > 0 ? (
-              <ul id={listId} role="listbox" className="max-h-64 overflow-y-auto overscroll-contain py-1">
+              <ul
+                id={listId}
+                role="listbox"
+                className="max-h-[min(16rem,50vh)] overflow-x-hidden overflow-y-auto overscroll-contain py-1"
+              >
                 {suggestions.map((option, index) => (
                   <li
                     key={option.key}
@@ -148,8 +166,10 @@ export function FlightLocationAutocomplete({
                       selectOption(option);
                     }}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-[#0b2f57]">{option.label}</p>
+                    <div className="flex min-w-0 items-center justify-between gap-2">
+                      <p className="min-w-0 truncate text-sm font-semibold text-[#0b2f57]">
+                        {option.label}
+                      </p>
                       <span className="shrink-0 rounded-md bg-[#0b2f57]/8 px-1.5 py-0.5 text-[10px] font-bold text-[#0b2f57]">
                         {option.code}
                       </span>
@@ -167,7 +187,7 @@ export function FlightLocationAutocomplete({
       : null;
 
   return (
-    <div ref={wrapperRef} className={`relative overflow-visible ${className}`}>
+    <div ref={wrapperRef} className={`relative min-w-0 max-w-full overflow-hidden ${className}`}>
       <label className={labelClassName}>{label}</label>
       <input
         ref={inputRef}
@@ -202,7 +222,7 @@ export function FlightLocationAutocomplete({
         role="combobox"
         aria-expanded={open}
         aria-controls={listId}
-        className={inputClassName}
+        className={`${inputClassName} max-w-full`}
       />
       {dropdown}
     </div>
