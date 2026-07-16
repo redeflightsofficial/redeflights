@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getAdminSessionFromRequest } from "@/lib/auth-session-edge";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isDashboardRoute =
     pathname === "/dashboard" || pathname.startsWith("/dashboard/");
@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     try {
       session = await getAdminSessionFromRequest(request);
     } catch (error) {
-      console.error("middleware session parse error:", error);
+      console.error("proxy session parse error:", error);
     }
   }
 
