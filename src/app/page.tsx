@@ -77,7 +77,7 @@ const services = [
     title: "Flights",
     desc: "We deal with international Flights worldwide",
     href: "/flights",
-    image: "/aboutus.jpeg",
+    image: "/aboutus.png",
   },
   {
     title: "Hotels",

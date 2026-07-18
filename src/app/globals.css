@@ -318,6 +318,12 @@ h3 {
     radial-gradient(circle at 18% 40%, rgba(255, 255, 255, 0.2), transparent 55%);
 }
 
+.page-hero-contain-image {
+  min-height: min(42vw, 520px);
+  background-position: center top;
+  background-size: 100% auto !important;
+}
+
 .hero-search-date-wrap {
   position: relative;
   margin-top: 0;

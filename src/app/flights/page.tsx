@@ -184,14 +184,13 @@ export default function FlightsPage() {
     <SiteShell active="Flights">
       <PageHero
         eyebrow="Fly Anywhere, Anytime"
-        title="Flights"
-        description="Your Journey, Our Priority"
         breadcrumb="Flights"
         centered
         compact
         eyebrowVariant="badge"
         showBreadcrumb={false}
-        image="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1800&q=80"
+        image="/aboutus.png"
+        imageFit="contain"
       >
         <div className="mx-auto max-w-[1260px] px-4 pb-4 sm:mt-[-6px]">
           <div className="overflow-x-hidden rounded-xl bg-gradient-to-br from-[#a8000d] via-[#e30613] to-[#c40010] shadow-[0_16px_36px_rgba(179,0,15,0.3)] ring-1 ring-white/20">

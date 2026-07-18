@@ -8,6 +8,7 @@ type PageHeroProps = {
   description?: string;
   breadcrumb: string;
   image: string;
+  imageFit?: "cover" | "contain" | "fill";
   centered?: boolean;
   showBreadcrumb?: boolean;
   compact?: boolean;
@@ -22,6 +23,7 @@ export function PageHero({
   description,
   breadcrumb,
   image,
+  imageFit = "cover",
   centered = false,
   showBreadcrumb = true,
   compact = false,
@@ -31,9 +33,14 @@ export function PageHero({
 }: PageHeroProps) {
   return (
     <section
-      className={`hero-depth relative bg-cover bg-center overflow-x-hidden ${children ? "overflow-y-visible" : "overflow-hidden"}`}
+      className={`hero-depth relative flex flex-col bg-center bg-no-repeat overflow-x-hidden ${
+        imageFit === "contain" ? "page-hero-contain-image" : ""
+      } ${children ? "overflow-y-visible" : "overflow-hidden"}`}
       style={{
         backgroundImage: `linear-gradient(135deg, rgba(4, 36, 72, 0.88) 0%, rgba(11, 47, 87, 0.72) 45%, rgba(4, 36, 72, 0.55) 100%), url('${image}')`,
+        backgroundColor: "#042448",
+        backgroundSize:
+          imageFit === "fill" ? "100% 100%" : imageFit === "contain" ? "contain" : "cover",
       }}
     >
       <div
@@ -94,7 +101,7 @@ export function PageHero({
           ) : null}
         </motion.div>
       </div>
-      {children ? <div className="relative z-20">{children}</div> : null}
+      {children ? <div className="relative z-20 mt-auto">{children}</div> : null}
     </section>
   );
 }
