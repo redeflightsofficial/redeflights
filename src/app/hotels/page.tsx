@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { ContactSelect } from "@/components/ContactSelect";
 import { ContentPageHero } from "@/components/ContentPageHero";
 import { SiteShell } from "@/components/SiteShell";
@@ -284,6 +285,7 @@ export default function HotelsPage() {
       adminHotels.length > 0
         ? adminHotels.map((hotel) => ({
             id: hotel.id,
+            slug: hotel.slug,
             name: hotel.name,
             location: hotel.location,
             stars: hotel.stars,
@@ -295,6 +297,7 @@ export default function HotelsPage() {
         : fallbackHotels.map((hotel) => ({
             ...hotel,
             id: hotel.name,
+            slug: null,
           })),
     [adminHotels],
   );
@@ -527,6 +530,13 @@ export default function HotelsPage() {
                       transition={{ duration: 0.4, delay: index * 0.05 }}
                       className="group relative overflow-hidden rounded-[1.35rem] shadow-[0_10px_36px_rgba(4,36,72,0.14)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(4,36,72,0.2)]"
                     >
+                      {hotel.slug ? (
+                        <Link
+                          href={`/hotels/${encodeURIComponent(hotel.slug)}`}
+                          aria-label={`View ${hotel.name} details`}
+                          className="absolute inset-0 z-[1]"
+                        />
+                      ) : null}
                       <div className="relative aspect-[5/4] overflow-hidden bg-slate-900 sm:aspect-[16/11]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
@@ -582,7 +592,7 @@ export default function HotelsPage() {
                               href={enquiryUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="btn-premium inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#e30613] px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(227,6,19,0.35)] transition hover:bg-[#c40010]"
+                              className="btn-premium relative z-10 inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#e30613] px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(227,6,19,0.35)] transition hover:bg-[#c40010]"
                             >
                               <WhatsAppIcon className="h-4 w-4" />
                               Enquire Now

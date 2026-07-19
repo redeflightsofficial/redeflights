@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { readLocalBanners } from "@/lib/banner-local";
+import { readLocalDestinations } from "@/lib/destination-local";
 import { readLocalHotels } from "@/lib/hotel-local";
 import { readLocalRoutes } from "@/lib/route-local";
 import { SITE_URL } from "@/lib/site-seo";
@@ -8,7 +9,7 @@ import { readLocalVisas } from "@/lib/visa-local";
 
 export const revalidate = 3600;
 
-type SitemapTable = "routes" | "banners" | "hotels" | "visas";
+type SitemapTable = "routes" | "banners" | "destinations" | "hotels" | "tour_packages" | "visas";
 type SlugRow = { slug: string; created_at?: string | null };
 
 const PAGE_SIZE = 1000;
@@ -69,7 +70,9 @@ async function loadActiveSlugs(table: SitemapTable): Promise<SlugRow[]> {
   const localReaders = {
     routes: readLocalRoutes,
     banners: readLocalBanners,
+    destinations: readLocalDestinations,
     hotels: readLocalHotels,
+    tour_packages: async () => [],
     visas: readLocalVisas,
   } as const;
 
@@ -105,10 +108,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/contact"), lastModified: now, changeFrequency: "monthly", priority: 0.7 },
   ];
 
-  const [routes, banners, hotels, visas] = await Promise.all([
+  const [routes, banners, destinations, hotels, tourPackages, visas] = await Promise.all([
     loadActiveSlugs("routes"),
     loadActiveSlugs("banners"),
+    loadActiveSlugs("destinations"),
     loadActiveSlugs("hotels"),
+    loadActiveSlugs("tour_packages"),
     loadActiveSlugs("visas"),
   ]);
 
@@ -126,6 +131,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  const destinationEntries: MetadataRoute.Sitemap = destinations.map((row) => ({
+    url: absoluteUrl(`/destinations/${encodeURIComponent(row.slug)}`),
+    lastModified: validLastModified(row.created_at),
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
+  const packageEntries: MetadataRoute.Sitemap = tourPackages.map((row) => ({
+    url: absoluteUrl(`/packages/${encodeURIComponent(row.slug)}`),
+    lastModified: validLastModified(row.created_at),
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
   const visaEntries: MetadataRoute.Sitemap = visas.map((row) => ({
     url: absoluteUrl(`/visa/${encodeURIComponent(row.slug)}`),
     lastModified: validLastModified(row.created_at),
@@ -133,5 +152,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticEntries, ...flightEntries, ...hotelEntries, ...visaEntries];
+  return [
+    ...staticEntries,
+    ...flightEntries,
+    ...destinationEntries,
+    ...hotelEntries,
+    ...packageEntries,
+    ...visaEntries,
+  ];
 }

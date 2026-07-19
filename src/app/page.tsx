@@ -586,8 +586,13 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.35, delay: index * 0.06 }}
-              className="group overflow-hidden rounded-xl border border-slate-200 bg-white"
+              className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white"
             >
+              <Link
+                href={`/packages/${encodeURIComponent(pkg.slug)}`}
+                aria-label={`View ${pkg.title} package details`}
+                className="absolute inset-0 z-[1]"
+              />
               <div className="relative aspect-[5/3] overflow-hidden bg-slate-100">
                 <Image
                   src={pkg.image}
@@ -609,7 +614,7 @@ export default function Home() {
                   )}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="btn-premium mt-3 inline-flex min-h-[44px] w-full items-center justify-center gap-2 bg-[#e30613] px-4 text-sm font-semibold text-white hover:bg-[#c40010]"
+                  className="btn-premium relative z-10 mt-3 inline-flex min-h-[44px] w-full items-center justify-center gap-2 bg-[#e30613] px-4 text-sm font-semibold text-white hover:bg-[#c40010]"
                 >
                   <WhatsAppIcon className="h-4 w-4" />
                   Enquire Now
@@ -666,19 +671,21 @@ export default function Home() {
               whileHover={{ y: -6 }}
               className="tilt-shell premium-shadow hover-lift-soft group relative overflow-hidden rounded-2xl"
             >
-              <Image
-                className="tilt-card h-56 w-full object-cover transition duration-500 group-hover:scale-105"
-                src={place.image}
-                alt={place.title}
-                width={420}
-                height={320}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-0 p-4 text-white">
-                <h3 className="text-lg font-bold">{place.title}</h3>
-                <p className="text-sm text-gray-200">{place.subtitle}</p>
-                <p className="mt-1 text-xs text-[#ffb3bc]">{place.packages}</p>
-              </div>
+              <Link href="/destinations" aria-label={`Explore ${place.title}`} className="block">
+                <Image
+                  className="tilt-card h-56 w-full object-cover transition duration-500 group-hover:scale-105"
+                  src={place.image}
+                  alt={place.title}
+                  width={420}
+                  height={320}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute bottom-0 p-4 text-white">
+                  <h3 className="text-lg font-bold">{place.title}</h3>
+                  <p className="text-sm text-gray-200">{place.subtitle}</p>
+                  <p className="mt-1 text-xs text-[#ffb3bc]">{place.packages}</p>
+                </div>
+              </Link>
             </motion.article>
           ))}
         </div>

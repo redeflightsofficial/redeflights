@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { ContactSelect } from "@/components/ContactSelect";
 import { ContentPageHero } from "@/components/ContentPageHero";
@@ -426,8 +427,13 @@ export default function PackagesPage() {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.3, delay: index * 0.04 }}
-                      className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:border-[#e30613]/25 hover:shadow-[0_10px_28px_rgba(11,47,87,0.08)]"
+                      className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:border-[#e30613]/25 hover:shadow-[0_10px_28px_rgba(11,47,87,0.08)]"
                     >
+                      <Link
+                        href={`/packages/${encodeURIComponent(pkg.slug)}`}
+                        aria-label={`View ${pkg.title} package details`}
+                        className="absolute inset-0 z-[1]"
+                      />
                       <div className="flex flex-col sm:flex-row">
                         <div className="relative w-full shrink-0 overflow-hidden bg-slate-100 sm:w-52 sm:min-h-[180px] md:w-56">
                           <div className="relative aspect-[5/3] w-full sm:absolute sm:inset-0 sm:aspect-auto sm:h-full">
@@ -474,7 +480,7 @@ export default function PackagesPage() {
                               href={enquiryUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="btn-premium inline-flex min-h-[46px] w-full items-center justify-center gap-2 bg-[#e30613] px-4 text-sm font-semibold text-white hover:bg-[#c40010]"
+                              className="btn-premium relative z-10 inline-flex min-h-[46px] w-full items-center justify-center gap-2 bg-[#e30613] px-4 text-sm font-semibold text-white hover:bg-[#c40010]"
                             >
                               <WhatsAppIcon className="h-5 w-5" />
                               Enquire Now

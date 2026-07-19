@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { ContactSelect } from "@/components/ContactSelect";
 import { VisaImage } from "@/components/VisaImage";
 import { WhatsAppIcon } from "@/components/icons";
@@ -371,8 +372,15 @@ export function DestinationSearchSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.35, delay: index * 0.04 }}
-                className="group overflow-hidden rounded-xl border border-slate-200 bg-white"
+                className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white"
               >
+                {place.slug ? (
+                  <Link
+                    href={`/destinations/${encodeURIComponent(place.slug)}`}
+                    aria-label={`View ${place.title} details`}
+                    className="absolute inset-0 z-[1]"
+                  />
+                ) : null}
                 <div className="relative aspect-[5/3] overflow-hidden bg-slate-100">
                   <VisaImage
                     src={place.image}
@@ -382,9 +390,10 @@ export function DestinationSearchSection() {
                     className={resultCardImageClass}
                   />
                 </div>
-                <div className="p-3.5">
+                <div className="relative p-3.5">
+                  <h3 className="text-lg font-bold text-[#0b2f57]">{place.title}</h3>
                   {place.country ? (
-                    <p className="text-lg font-bold text-[#e30613]">{place.country}</p>
+                    <p className="mt-1 text-sm font-semibold text-[#e30613]">{place.country}</p>
                   ) : null}
                   <button
                     type="button"
@@ -394,7 +403,7 @@ export function DestinationSearchSection() {
                         travelers: appliedFilters.travelers,
                       })
                     }
-                    className={`inline-flex items-center gap-1.5 text-sm font-semibold text-[#e30613] transition hover:gap-2 ${place.country ? "mt-2" : ""}`}
+                    className={`relative z-10 inline-flex items-center gap-1.5 text-sm font-semibold text-[#e30613] transition hover:gap-2 ${place.country ? "mt-2" : ""}`}
                   >
                     <WhatsAppIcon className="h-4 w-4" />
                     Enquiry Now <span aria-hidden>→</span>

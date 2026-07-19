@@ -194,6 +194,7 @@ export function buildSearchDestinations(entries: AggregatedEntry[]): Destination
 
     return {
       id: manual?.id || entry.key,
+      slug: manual?.slug,
       title: entry.label,
       subtitle: manual?.subtitle || `Explore ${entry.label}`,
       country: manual?.country || entry.country,
@@ -210,6 +211,7 @@ export function buildSearchDestinations(entries: AggregatedEntry[]): Destination
 export function managedRecordsToDestinations(records: DestinationRecord[]): Destination[] {
   return records.map((record) => ({
     id: record.id,
+    slug: record.slug,
     title: record.title,
     subtitle: record.subtitle || `Explore ${record.title}`,
     country: record.country,

@@ -1,6 +1,24 @@
 import { createAdminClient, hasSupabaseConfig } from "@/lib/supabase-admin";
 import type { TourPackage } from "@/types/tour-package";
 
+export async function getPackageBySlug(slug: string) {
+  if (!hasSupabaseConfig()) return null;
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("tour_packages")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    console.error("package slug fetch error:", error);
+    return null;
+  }
+
+  return (data as TourPackage | null) ?? null;
+}
+
 export async function getPackageById(id: string) {
   if (!hasSupabaseConfig()) return null;
 

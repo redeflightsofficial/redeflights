@@ -20,6 +20,7 @@ export type DestinationSourceTag = "manual" | "hotel" | "visa" | "flight";
 
 export interface Destination {
   id: string;
+  slug?: string;
   title: string;
   subtitle: string;
   country: string;

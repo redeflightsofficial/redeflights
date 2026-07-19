@@ -3,6 +3,7 @@ import type { TourPackage } from "@/types/tour-package";
 
 export type DisplayPackage = {
   id: string;
+  slug: string;
   tag: string;
   title: string;
   route: string;
@@ -16,6 +17,7 @@ export type DisplayPackage = {
 export function toDisplayPackage(pkg: TourPackage): DisplayPackage {
   return {
     id: pkg.id,
+    slug: pkg.slug,
     tag: pkg.tag,
     title: normalizePackageTitle(pkg.title) || "Tour Package",
     route: pkg.route,
