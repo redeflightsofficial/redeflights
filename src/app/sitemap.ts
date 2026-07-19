@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { readLocalBanners } from "@/lib/banner-local";
 import { readLocalHotels } from "@/lib/hotel-local";
 import { readLocalRoutes } from "@/lib/route-local";
 import { SITE_URL } from "@/lib/site-seo";
@@ -7,7 +8,7 @@ import { readLocalVisas } from "@/lib/visa-local";
 
 export const revalidate = 3600;
 
-type SitemapTable = "routes" | "hotels" | "visas";
+type SitemapTable = "routes" | "banners" | "hotels" | "visas";
 type SlugRow = { slug: string; created_at?: string | null };
 
 const PAGE_SIZE = 1000;
@@ -67,6 +68,7 @@ async function loadActiveSlugs(table: SitemapTable): Promise<SlugRow[]> {
 
   const localReaders = {
     routes: readLocalRoutes,
+    banners: readLocalBanners,
     hotels: readLocalHotels,
     visas: readLocalVisas,
   } as const;
@@ -74,7 +76,7 @@ async function loadActiveSlugs(table: SitemapTable): Promise<SlugRow[]> {
   const local = await localReaders[table]();
   return dedupeSlugRows(local
     .filter((item) => item.status === "active" && Boolean(item.slug?.trim()))
-    .map((item) => ({ slug: item.slug, created_at: item.created_at })));
+    .map((item) => ({ slug: String(item.slug || ""), created_at: item.created_at })));
 }
 
 function absoluteUrl(path: string) {
@@ -103,13 +105,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/contact"), lastModified: now, changeFrequency: "monthly", priority: 0.7 },
   ];
 
-  const [routes, hotels, visas] = await Promise.all([
+  const [routes, banners, hotels, visas] = await Promise.all([
     loadActiveSlugs("routes"),
+    loadActiveSlugs("banners"),
     loadActiveSlugs("hotels"),
     loadActiveSlugs("visas"),
   ]);
 
-  const flightEntries: MetadataRoute.Sitemap = routes.map((row) => ({
+  const flightEntries: MetadataRoute.Sitemap = dedupeSlugRows([...routes, ...banners]).map((row) => ({
     url: absoluteUrl(`/flights/${encodeURIComponent(row.slug)}`),
     lastModified: validLastModified(row.created_at),
     changeFrequency: "weekly",

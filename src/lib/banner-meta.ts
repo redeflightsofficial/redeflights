@@ -6,6 +6,7 @@ export type BannerMeta = {
   metaDescription: string;
   h1Heading: string;
   imageUrl: string;
+  pageUrl: string;
 };
 
 export type BannerUrlOptions = {
@@ -31,6 +32,12 @@ export function buildDirectBannerImageUrl(
   const fileName = extractBannerFileName(storageFileName);
   const siteOrigin = options.siteOrigin?.replace(/\/$/, "");
   return siteOrigin ? `${siteOrigin}/${fileName}` : `/${fileName}`;
+}
+
+export function buildBannerPageUrl(slug: string, siteOrigin = getSiteOrigin()) {
+  const origin = siteOrigin.replace(/\/$/, "");
+  const path = `/flights/${encodeURIComponent(slug)}`;
+  return origin ? `${origin}${path}` : path;
 }
 
 export function ensureDirectImageUrl(imageUrl: string, options: BannerUrlOptions = {}) {
@@ -155,6 +162,7 @@ export function buildBannerMetaFromFileName(
     metaDescription: seo.metaDescription,
     h1Heading: seo.h1Heading,
     imageUrl: buildDirectBannerImageUrl(storageFileName, options),
+    pageUrl: buildBannerPageUrl(slug, options.siteOrigin),
   };
 }
 
@@ -199,5 +207,6 @@ export function getBannerSeoFields(
     imageUrl: banner.image_url
       ? ensureDirectImageUrl(banner.image_url, options)
       : buildDirectBannerImageUrl(banner.storage_path, options),
+    pageUrl: buildBannerPageUrl(slug, options.siteOrigin),
   };
 }

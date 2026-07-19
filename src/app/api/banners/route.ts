@@ -7,6 +7,7 @@ import {
   buildBannerMetaFromFileName,
   buildBannerStoragePath,
   ensureDirectImageUrl,
+  getBannerSeoFields,
   getBannerPublicUrl,
   getSiteOrigin,
 } from "@/lib/banner";
@@ -58,10 +59,15 @@ async function loadBanners(activeOnly: boolean, siteOrigin = getSiteOrigin()) {
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
 
-  return banners.map((banner) => ({
-    ...banner,
-    image_url: ensureDirectImageUrl(banner.image_url, { siteOrigin }),
-  }));
+  return banners.map((banner) => {
+    const seo = getBannerSeoFields(banner, { siteOrigin });
+    return {
+      ...banner,
+      slug: seo.slug,
+      image_url: ensureDirectImageUrl(banner.image_url, { siteOrigin }),
+      page_url: seo.pageUrl,
+    };
+  });
 }
 
 function buildStats(banners: Banner[]) {

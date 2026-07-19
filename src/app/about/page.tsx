@@ -52,8 +52,7 @@ const services = [
     title: "Flights",
     badge: "Best Fares",
     text: "Domestic and international fares with flexible options.",
-    image:
-      "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80",
+    image: "/aboutus.png",
     href: "/flights",
   },
   {

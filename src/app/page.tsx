@@ -469,8 +469,10 @@ export default function Home() {
                 }}
               >
                 {loopBanners.map((banner, index) => (
-                  <div
+                  <Link
                     key={`${banner.src}-${index}`}
+                    href={banner.href}
+                    aria-label={`View ${banner.alt} details`}
                     className="h-full shrink-0 overflow-hidden"
                     style={{ width: `${100 / loopBanners.length}%` }}
                   >
@@ -481,7 +483,7 @@ export default function Home() {
                       className="block h-full w-full object-cover object-[center_68%]"
                       draggable={false}
                     />
-                  </div>
+                  </Link>
                 ))}
               </motion.div>
             </div>

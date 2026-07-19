@@ -3,6 +3,7 @@ import { resolveUniqueBannerFileName } from "@/lib/banner-meta";
 
 export {
   buildBannerMetaFromFileName,
+  buildBannerPageUrl,
   buildDirectBannerImageUrl,
   buildSeoBannerFileName,
   buildSeoFieldsFromSlug,
@@ -25,6 +26,7 @@ export function bannersToSlides(banners: Banner[]): BannerSlide[] {
   return banners.map((banner) => ({
     src: banner.image_url,
     alt: banner.alt || "REDE I FLIGHTS Promotion",
+    href: banner.slug ? `/flights/${encodeURIComponent(banner.slug)}` : banner.page_url || "/flights",
   }));
 }
 

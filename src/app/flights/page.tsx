@@ -4,6 +4,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlightLocationAutocomplete } from "@/components/FlightLocationAutocomplete";
 import { PageHero } from "@/components/PageHero";
+import {
+  DEFAULT_PASSENGER_COUNTS,
+  formatPassengerSummary,
+  PassengerPicker,
+  type PassengerCounts,
+} from "@/components/PassengerPicker";
 import { SiteShell } from "@/components/SiteShell";
 import { SwapRoutesIcon, WhatsAppIcon } from "@/components/icons";
 import {
@@ -81,6 +87,7 @@ export default function FlightsPage() {
   const [departDate, setDepartDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [travelClass, setTravelClass] = useState("economy");
+  const [passengers, setPassengers] = useState<PassengerCounts>(DEFAULT_PASSENGER_COUNTS);
 
   const loadRoutes = useCallback(async (silent = false) => {
     if (!silent) {
@@ -177,8 +184,8 @@ export default function FlightsPage() {
 
   const searchGridClass =
     tripType === "return"
-      ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end lg:gap-3"
-      : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end lg:gap-3";
+      ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))_auto] lg:items-end lg:gap-3"
+      : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_auto] lg:items-end lg:gap-3";
 
   return (
     <SiteShell active="Flights">
@@ -191,8 +198,10 @@ export default function FlightsPage() {
         showBreadcrumb={false}
         image="/aboutus.png"
         imageFit="contain"
-      >
-        <div className="mx-auto max-w-[1260px] px-4 pb-4 sm:mt-[-6px]">
+      />
+
+      <section className="relative z-30 border-y border-slate-200 bg-[#f8fafc]">
+        <div className="mx-auto max-w-[1260px] px-4 py-4 sm:py-5">
           <div className="overflow-x-hidden rounded-xl bg-gradient-to-br from-[#a8000d] via-[#e30613] to-[#c40010] shadow-[0_16px_36px_rgba(179,0,15,0.3)] ring-1 ring-white/20">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/15 px-4 py-2.5 sm:px-5">
               <div className="inline-flex gap-1 rounded-full border border-white/20 bg-white/10 p-0.5">
@@ -296,6 +305,15 @@ export default function FlightsPage() {
                   </label>
                 ) : null}
 
+                <div className="block min-w-0">
+                  <span className={flightsLabelClass}>Travellers</span>
+                  <PassengerPicker
+                    value={passengers}
+                    onChange={setPassengers}
+                    buttonClassName={`${flightsFieldClass} flex items-center justify-between gap-2 text-left`}
+                  />
+                </div>
+
                 <label className="block min-w-0">
                   <span className={flightsLabelClass}>Class</span>
                   <select
@@ -321,6 +339,7 @@ export default function FlightsPage() {
                       departDate,
                       returnDate: tripType === "return" ? returnDate : undefined,
                       travelClass,
+                      passengers: formatPassengerSummary(passengers),
                       airline,
                     });
                   }}
@@ -333,7 +352,7 @@ export default function FlightsPage() {
             </div>
           </div>
         </div>
-      </PageHero>
+      </section>
 
       <section className="border-t border-slate-200/80 bg-[#f8fafc]">
         <div className="mx-auto max-w-[1260px] px-4 py-8 md:py-10">

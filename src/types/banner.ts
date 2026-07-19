@@ -8,6 +8,7 @@ export type Banner = {
   meta_description?: string;
   h1_heading?: string;
   image_url: string;
+  page_url?: string;
   storage_path: string;
   status: BannerStatus;
   created_at: string;
@@ -16,4 +17,5 @@ export type Banner = {
 export type BannerSlide = {
   src: string;
   alt: string;
+  href: string;
 };

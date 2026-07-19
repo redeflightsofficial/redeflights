@@ -389,8 +389,8 @@ export default function BannerImagesPage() {
             {autoMeta ? (
               <div className="rounded-lg border border-slate-200 bg-[#f8fafc] px-3 py-2 text-xs text-slate-600">
                 <p>
-                  <span className="font-bold text-[#0b2f57]">Image URL:</span>{" "}
-                  <code className="break-all text-[#e30613]">{autoMeta.imageUrl}</code>
+                  <span className="font-bold text-[#0b2f57]">Page URL:</span>{" "}
+                  <code className="break-all text-[#e30613]">{autoMeta.pageUrl}</code>
                 </p>
                 <p className="mt-1">
                   <span className="font-bold text-[#0b2f57]">Slug:</span>{" "}
@@ -486,7 +486,7 @@ export default function BannerImagesPage() {
                   <tr className="border-b border-slate-200 bg-[#f8fafc]">
                     <th className="px-4 py-3 sm:px-5">Preview</th>
                     <th className="px-4 py-3 sm:px-5">Banner & SEO</th>
-                    <th className="hidden px-4 py-3 md:table-cell sm:px-5">Image URL</th>
+                    <th className="hidden px-4 py-3 md:table-cell sm:px-5">Page URL</th>
                     <th className="px-4 py-3 sm:px-5">Status</th>
                     <th className="px-4 py-3 sm:px-5">Uploaded</th>
                     <th className="px-4 py-3 sm:px-5">Actions</th>
@@ -517,12 +517,12 @@ export default function BannerImagesPage() {
                         <p className="mt-1 text-xs text-slate-500">{seo.seoTitle}</p>
                         <p className="mt-1 line-clamp-2 text-xs text-slate-500">{seo.metaDescription}</p>
                         <p className="mt-1 line-clamp-1 text-xs text-slate-400 md:hidden">
-                          {seo.imageUrl}
+                          {seo.pageUrl}
                         </p>
                       </td>
                       <td className="hidden max-w-[220px] px-4 py-3 md:table-cell sm:px-5">
-                        <p className="truncate text-xs text-slate-500" title={seo.imageUrl}>
-                          {seo.imageUrl}
+                        <p className="truncate text-xs text-slate-500" title={seo.pageUrl}>
+                          {seo.pageUrl}
                         </p>
                       </td>
                       <td className="px-4 py-3 sm:px-5">
@@ -698,7 +698,7 @@ export default function BannerImagesPage() {
                           <span className="font-semibold text-[#0b2f57]">H1:</span> {seo.h1Heading}
                         </p>
                         <p className="mt-1 break-all">
-                          <span className="font-semibold text-[#0b2f57]">Image URL:</span> {seo.imageUrl}
+                          <span className="font-semibold text-[#0b2f57]">Page URL:</span> {seo.pageUrl}
                         </p>
                       </>
                     );
