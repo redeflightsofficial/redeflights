@@ -96,7 +96,7 @@ export async function PATCH(
 
     const patch = {
       country,
-      visa_type: visaType || null,
+      visa_type: visaType || "",
       processing_time: processingTime || null,
       description: input.description || null,
       image_url: imageMeta.image_url,
