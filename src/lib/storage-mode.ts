@@ -15,6 +15,10 @@ export function formatStorageError(error: unknown): string {
     return "Database table missing. Run the SQL files in your Supabase SQL Editor.";
   }
 
+  if (record.code === "23505") {
+    return "This record already exists.";
+  }
+
   return record.message || "Database operation failed.";
 }
 

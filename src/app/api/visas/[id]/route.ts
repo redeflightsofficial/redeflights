@@ -5,6 +5,7 @@ import { buildVisaSeo } from "@/lib/visa-meta";
 import { readLocalVisas } from "@/lib/visa-local";
 import { processVisaImageUpload, removeVisaImageFile } from "@/lib/visa-upload";
 import { getVisaById, removeVisaById, saveVisaById } from "@/lib/visa-store";
+import { createAdminClient, hasSupabaseConfig } from "@/lib/supabase-admin";
 import type { EntityStatus } from "@/types/airline";
 
 async function parseVisaPatchRequest(request: Request) {
@@ -72,9 +73,19 @@ export async function PATCH(
 
     let imageMeta: { image_url: string | null; storage_path: string | null };
     try {
-      const existingPaths = (await readLocalVisas())
-        .map((item) => item.storage_path || "")
-        .filter(Boolean);
+      let existingPaths: string[] = [];
+      if (hasSupabaseConfig()) {
+        const supabase = createAdminClient();
+        const { data: visaRows } = await supabase.from("visas").select("storage_path");
+        existingPaths = (visaRows ?? [])
+          .map((item) => item.storage_path || "")
+          .filter(Boolean);
+      } else {
+        existingPaths = (await readLocalVisas())
+          .map((item) => item.storage_path || "")
+          .filter(Boolean);
+      }
+
       imageMeta = await processVisaImageUpload(input.file, input.image_url, siteOrigin, {
         country,
         existingPaths,

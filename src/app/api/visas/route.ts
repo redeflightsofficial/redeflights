@@ -136,11 +136,39 @@ export async function POST(request: Request) {
     const processingTime = input.processing_time;
     const seo = buildVisaSeo(country, visaType, processingTime, siteOrigin);
 
+    if (hasSupabaseConfig()) {
+      const supabase = createAdminClient();
+      const { data: existingSlug } = await supabase
+        .from("visas")
+        .select("id")
+        .eq("slug", seo.slug)
+        .maybeSingle();
+
+      if (existingSlug) {
+        return NextResponse.json({ error: "This visa service already exists." }, { status: 409 });
+      }
+    } else {
+      const existing = await findLocalVisaBySlug(seo.slug);
+      if (existing) {
+        return NextResponse.json({ error: "This visa service already exists." }, { status: 409 });
+      }
+    }
+
     let imageMeta: { image_url: string | null; storage_path: string | null };
     try {
-      const existingPaths = (await readLocalVisas())
-        .map((item) => item.storage_path || "")
-        .filter(Boolean);
+      let existingPaths: string[] = [];
+      if (hasSupabaseConfig()) {
+        const supabase = createAdminClient();
+        const { data: visaRows } = await supabase.from("visas").select("storage_path");
+        existingPaths = (visaRows ?? [])
+          .map((item) => item.storage_path || "")
+          .filter(Boolean);
+      } else {
+        existingPaths = (await readLocalVisas())
+          .map((item) => item.storage_path || "")
+          .filter(Boolean);
+      }
+
       imageMeta = await processVisaImageUpload(input.file, input.image_url, siteOrigin, {
         country,
         existingPaths,
@@ -195,11 +223,6 @@ export async function POST(request: Request) {
     }
 
     if (useLocalStorage()) {
-      const existing = await findLocalVisaBySlug(seo.slug);
-      if (existing) {
-        return NextResponse.json({ error: "This visa service already exists." }, { status: 409 });
-      }
-
       const localVisa = await insertLocalVisa(payload);
       return NextResponse.json({
         success: true,
@@ -211,7 +234,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: formatStorageError(storageError) }, { status: 500 });
   } catch (error) {
     console.error("visas POST error:", error);
-    return NextResponse.json({ error: "Unable to add visa service." }, { status: 500 });
+    const message =
+      error instanceof Error && error.message && error.message !== "Unable to add visa service."
+        ? error.message
+        : "Unable to add visa service.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

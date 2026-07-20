@@ -173,6 +173,7 @@ export function VisaDashboard() {
     try {
       const response = await fetch(editing ? `/api/visas/${editing.id}` : "/api/visas", {
         method: editing ? "PATCH" : "POST",
+        credentials: "same-origin",
         body: formData,
       });
       const result = (await response.json()) as {

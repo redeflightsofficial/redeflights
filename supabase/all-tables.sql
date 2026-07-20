@@ -94,6 +94,16 @@ create policy "Public can read active visas" on public.visas for select to anon,
 drop policy if exists "Admin can manage visas" on public.visas;
 create policy "Admin can manage visas" on public.visas for all to anon, authenticated using (true) with check (true);
 
+insert into storage.buckets (id, name, public) values ('visas', 'visas', true) on conflict (id) do update set public = true;
+drop policy if exists "Public read visa files" on storage.objects;
+create policy "Public read visa files" on storage.objects for select to public using (bucket_id = 'visas');
+drop policy if exists "Admin upload visa files" on storage.objects;
+create policy "Admin upload visa files" on storage.objects for insert to anon, authenticated with check (bucket_id = 'visas');
+drop policy if exists "Admin update visa files" on storage.objects;
+create policy "Admin update visa files" on storage.objects for update to anon, authenticated using (bucket_id = 'visas');
+drop policy if exists "Admin delete visa files" on storage.objects;
+create policy "Admin delete visa files" on storage.objects for delete to anon, authenticated using (bucket_id = 'visas');
+
 -- banners (upgrade legacy table + storage)
 create table if not exists public.banners (
   id uuid primary key default gen_random_uuid(),
