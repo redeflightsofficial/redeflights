@@ -21,9 +21,16 @@ import {
   type FlightDeal,
 } from "@/lib/flight-deal-display";
 import {
+  airlineDetailHref,
+  airportDetailHref,
+  resolveFlightEntitySlugs,
+  type FlightEntitySlugs,
+} from "@/lib/flight-entity-links";
+import {
   buildFlightSearchLocations,
   matchesFlightLocation,
 } from "@/lib/flight-search-locations";
+import type { Airline } from "@/types/airline";
 import type { Airport } from "@/types/airport";
 import type { Route } from "@/types/route";
 
@@ -48,17 +55,59 @@ function DealCardSkeleton() {
   );
 }
 
-function FlightDealCard({ deal }: { deal: FlightDeal }) {
+function FlightDealCard({
+  deal,
+  entitySlugs,
+}: {
+  deal: FlightDeal;
+  entitySlugs: FlightEntitySlugs;
+}) {
   const enquiryUrl = buildFlightEnquiryUrl(deal.fromCity, deal.toCity, deal.airline);
 
   return (
-    <article className="group rounded-xl border border-slate-200/90 bg-white p-4 transition duration-200 hover:border-slate-300 hover:shadow-[0_8px_20px_rgba(11,47,87,0.07)]">
-      <div className="min-w-0 space-y-2">
-        <p className="truncate text-xs font-semibold text-[#0b2f57]">{deal.airline}</p>
+    <article className="group relative rounded-xl border border-slate-200/90 bg-white p-4 transition duration-200 hover:border-slate-300 hover:shadow-[0_8px_20px_rgba(11,47,87,0.07)]">
+      {deal.slug ? (
+        <Link
+          href={`/flights/${encodeURIComponent(deal.slug)}`}
+          aria-label={`View ${deal.fromCity} to ${deal.toCity} flight details`}
+          className="absolute inset-0 z-[1]"
+        />
+      ) : null}
+
+      <div className="relative z-[2] min-w-0 space-y-2">
+        {entitySlugs.airlineSlug ? (
+          <Link
+            href={airlineDetailHref(entitySlugs.airlineSlug)}
+            className="relative z-10 block truncate text-xs font-semibold text-[#0b2f57] transition hover:text-[#e30613]"
+          >
+            {deal.airline}
+          </Link>
+        ) : (
+          <p className="truncate text-xs font-semibold text-[#0b2f57]">{deal.airline}</p>
+        )}
+
         <h3 className="truncate text-sm font-bold leading-snug text-[#0b2f57]">
-          {deal.fromCity}
+          {entitySlugs.fromAirportSlug ? (
+            <Link
+              href={airportDetailHref(entitySlugs.fromAirportSlug)}
+              className="relative z-10 transition hover:text-[#e30613]"
+            >
+              {deal.fromCity}
+            </Link>
+          ) : (
+            deal.fromCity
+          )}
           <span className="mx-2 font-normal text-slate-300">→</span>
-          {deal.toCity}
+          {entitySlugs.toAirportSlug ? (
+            <Link
+              href={airportDetailHref(entitySlugs.toAirportSlug)}
+              className="relative z-10 transition hover:text-[#e30613]"
+            >
+              {deal.toCity}
+            </Link>
+          ) : (
+            deal.toCity
+          )}
         </h3>
       </div>
 
@@ -66,7 +115,7 @@ function FlightDealCard({ deal }: { deal: FlightDeal }) {
         href={enquiryUrl}
         target="_blank"
         rel="noreferrer"
-        className="btn-premium mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-[#e30613] text-xs font-semibold text-white transition hover:bg-[#c40010]"
+        className="btn-premium relative z-10 mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-[#e30613] text-xs font-semibold text-white transition hover:bg-[#c40010]"
       >
         <WhatsAppIcon className="h-3.5 w-3.5" />
         Enquire Now
@@ -77,6 +126,7 @@ function FlightDealCard({ deal }: { deal: FlightDeal }) {
 
 export default function FlightsPage() {
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [airlines, setAirlines] = useState<Airline[]>([]);
   const [airports, setAirports] = useState<Airport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,12 +145,14 @@ export default function FlightsPage() {
       setError(null);
     }
     try {
-      const [routesResponse, airportsResponse] = await Promise.all([
+      const [routesResponse, airlinesResponse, airportsResponse] = await Promise.all([
         fetch("/api/routes", { cache: "no-store" }),
+        fetch("/api/airlines", { cache: "no-store" }),
         fetch("/api/airports", { cache: "no-store" }),
       ]);
 
       const routesResult = (await routesResponse.json()) as { routes?: Route[]; error?: string };
+      const airlinesResult = (await airlinesResponse.json()) as { airlines?: Airline[]; error?: string };
       const airportsResult = (await airportsResponse.json()) as {
         airports?: Airport[];
         error?: string;
@@ -109,17 +161,20 @@ export default function FlightsPage() {
       if (!routesResponse.ok) {
         setError(routesResult.error || "Unable to load flight routes.");
         setRoutes([]);
+        setAirlines([]);
         setAirports([]);
         return;
       }
 
       setRoutes(routesResult.routes || []);
+      setAirlines(airlinesResponse.ok ? airlinesResult.airlines || [] : []);
       setAirports(airportsResponse.ok ? airportsResult.airports || [] : []);
       setError(null);
     } catch {
       if (!silent) {
         setError("Network error while loading flight routes.");
         setRoutes([]);
+        setAirlines([]);
         setAirports([]);
       }
     } finally {
@@ -423,7 +478,17 @@ export default function FlightsPage() {
           {!loading && !error && deals.length > 0 ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {deals.map((deal) => (
-                <FlightDealCard key={deal.id} deal={deal} />
+                <FlightDealCard
+                  key={deal.id}
+                  deal={deal}
+                  entitySlugs={resolveFlightEntitySlugs(
+                    deal.airlineCode,
+                    deal.fromCode,
+                    deal.toCode,
+                    airlines,
+                    airports,
+                  )}
+                />
               ))}
             </div>
           ) : null}

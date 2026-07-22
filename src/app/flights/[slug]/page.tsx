@@ -6,7 +6,10 @@ import { SiteShell } from "@/components/SiteShell";
 import { WhatsAppIcon } from "@/components/icons";
 import { getBannerBySlug } from "@/lib/banner-store";
 import { parseRouteFromSlug } from "@/lib/banner-meta";
+import { getAirlineByIataCode } from "@/lib/airline-store";
+import { getAirportByIataCode } from "@/lib/airport-store";
 import { buildFlightDeal, buildFlightEnquiryUrl } from "@/lib/flight-deal-display";
+import { airlineDetailHref, airportDetailHref } from "@/lib/flight-entity-links";
 import { getRouteBySlug } from "@/lib/route-store";
 import { dynamicPageMetadata, brandedTitle } from "@/lib/site-seo";
 import type { Route } from "@/types/route";
@@ -87,6 +90,21 @@ export default async function FlightRoutePage({ params }: FlightRoutePageProps) 
   const enquiryUrl = buildFlightEnquiryUrl(route.from_city, route.to_city, deal.airline);
   const heroTitle = route.h1_heading || `${route.from_city} to ${route.to_city} Flights`;
 
+  const [airline, fromAirport, toAirport] = await Promise.all([
+    route.airline_iata_code ? getAirlineByIataCode(route.airline_iata_code) : Promise.resolve(null),
+    route.from_airport_code ? getAirportByIataCode(route.from_airport_code) : Promise.resolve(null),
+    route.to_airport_code ? getAirportByIataCode(route.to_airport_code) : Promise.resolve(null),
+  ]);
+
+  const airlineHref =
+    airline?.status === "active" && airline.slug ? airlineDetailHref(airline.slug) : null;
+  const fromAirportHref =
+    fromAirport?.status === "active" && fromAirport.slug
+      ? airportDetailHref(fromAirport.slug)
+      : null;
+  const toAirportHref =
+    toAirport?.status === "active" && toAirport.slug ? airportDetailHref(toAirport.slug) : null;
+
   return (
     <SiteShell>
       <section className="mx-auto grid max-w-[1260px] bg-white lg:grid-cols-[7fr_3fr]">
@@ -121,11 +139,32 @@ export default async function FlightRoutePage({ params }: FlightRoutePageProps) 
         <div className="mx-auto max-w-2xl">
           <article className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_8px_24px_rgba(11,47,87,0.06)] sm:p-5">
             <div className="min-w-0 space-y-2">
-              <p className="text-sm font-semibold text-[#0b2f57]">{deal.airline}</p>
+              {airlineHref ? (
+                <Link
+                  href={airlineHref}
+                  className="text-sm font-semibold text-[#0b2f57] transition hover:text-[#e30613]"
+                >
+                  {deal.airline}
+                </Link>
+              ) : (
+                <p className="text-sm font-semibold text-[#0b2f57]">{deal.airline}</p>
+              )}
               <h2 className="text-lg font-bold leading-snug text-[#0b2f57]">
-                {deal.fromCity}
+                {fromAirportHref ? (
+                  <Link href={fromAirportHref} className="transition hover:text-[#e30613]">
+                    {deal.fromCity}
+                  </Link>
+                ) : (
+                  deal.fromCity
+                )}
                 <span className="mx-2.5 font-normal text-slate-300">→</span>
-                {deal.toCity}
+                {toAirportHref ? (
+                  <Link href={toAirportHref} className="transition hover:text-[#e30613]">
+                    {deal.toCity}
+                  </Link>
+                ) : (
+                  deal.toCity
+                )}
               </h2>
             </div>
 

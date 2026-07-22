@@ -4,6 +4,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { buildRouteSeo } from "@/lib/route-meta";
+import {
+  airlineDetailHref,
+  airportDetailHref,
+  buildIataSlugMap,
+} from "@/lib/flight-entity-links";
 import type { Airline, EntityStatus } from "@/types/airline";
 import type { Airport } from "@/types/airport";
 import type { Route } from "@/types/route";
@@ -206,6 +211,9 @@ export function RoutesDashboard({ variant = "routes" }: { variant?: DashboardVar
     const start = page * ROUTES_PER_PAGE;
     return filteredRoutes.slice(start, start + ROUTES_PER_PAGE);
   }, [filteredRoutes, page]);
+
+  const airlineSlugByCode = useMemo(() => buildIataSlugMap(airlines), [airlines]);
+  const airportSlugByCode = useMemo(() => buildIataSlugMap(airports), [airports]);
 
   useEffect(() => {
     setPage(0);
@@ -593,13 +601,66 @@ export function RoutesDashboard({ variant = "routes" }: { variant?: DashboardVar
                 </tr>
               </thead>
               <tbody>
-                {paginatedRoutes.map((route) => (
+                {paginatedRoutes.map((route) => {
+                  const airlineSlug = route.airline_iata_code
+                    ? airlineSlugByCode.get(route.airline_iata_code.trim().toUpperCase())
+                    : undefined;
+                  const fromAirportSlug = route.from_airport_code
+                    ? airportSlugByCode.get(route.from_airport_code.trim().toUpperCase())
+                    : undefined;
+                  const toAirportSlug = route.to_airport_code
+                    ? airportSlugByCode.get(route.to_airport_code.trim().toUpperCase())
+                    : undefined;
+
+                  return (
                   <tr key={route.id} className="border-b border-slate-100">
                     <td className="font-semibold text-[#0b2f57]">{route.from_city}</td>
                     <td className="font-semibold text-[#0b2f57]">{route.to_city}</td>
-                    <td>{route.airline_name || "-"}</td>
+                    <td>
+                      {route.airline_name && airlineSlug ? (
+                        <Link
+                          href={airlineDetailHref(airlineSlug)}
+                          target="_blank"
+                          className="font-semibold text-[#0b2f57] transition hover:text-[#e30613]"
+                        >
+                          {route.airline_name}
+                        </Link>
+                      ) : (
+                        route.airline_name || "-"
+                      )}
+                    </td>
                     <td className="text-[11px] text-slate-600">
-                      {route.from_airport_code || "-"} → {route.to_airport_code || "-"}
+                      {route.from_airport_code ? (
+                        fromAirportSlug ? (
+                          <Link
+                            href={airportDetailHref(fromAirportSlug)}
+                            target="_blank"
+                            className="font-semibold text-[#0b2f57] transition hover:text-[#e30613]"
+                          >
+                            {route.from_airport_code}
+                          </Link>
+                        ) : (
+                          route.from_airport_code
+                        )
+                      ) : (
+                        "-"
+                      )}
+                      {" → "}
+                      {route.to_airport_code ? (
+                        toAirportSlug ? (
+                          <Link
+                            href={airportDetailHref(toAirportSlug)}
+                            target="_blank"
+                            className="font-semibold text-[#0b2f57] transition hover:text-[#e30613]"
+                          >
+                            {route.to_airport_code}
+                          </Link>
+                        ) : (
+                          route.to_airport_code
+                        )
+                      ) : (
+                        "-"
+                      )}
                     </td>
                     <td className="max-w-[180px] text-[11px] text-slate-600">
                       {route.status === "active" && route.slug ? (
@@ -646,7 +707,8 @@ export function RoutesDashboard({ variant = "routes" }: { variant?: DashboardVar
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -18,3 +18,23 @@ export async function getAirportBySlug(slug: string) {
   const airports = await readLocalAirports();
   return airports.find((item) => item.slug === slug) ?? null;
 }
+
+export async function getAirportByIataCode(iataCode: string) {
+  const code = iataCode.trim().toUpperCase();
+  if (!code) return null;
+
+  if (hasSupabaseConfig()) {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("airports")
+      .select("*")
+      .eq("iata_code", code)
+      .maybeSingle();
+
+    if (!error && data) return data as Airport;
+    if (error) console.error("airport iata fetch error:", error);
+  }
+
+  const airports = await readLocalAirports();
+  return airports.find((item) => item.iata_code.trim().toUpperCase() === code) ?? null;
+}

@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { buildAirlineSeo } from "@/lib/airline-meta";
 import { buildAirportSeo } from "@/lib/airport-meta";
+import { airlineDetailHref, airportDetailHref } from "@/lib/flight-entity-links";
 import type { Airline, EntityStatus } from "@/types/airline";
 import type { Airport } from "@/types/airport";
 import {
@@ -561,15 +563,55 @@ export function MasterEntityDashboard({
                 </tr>
               </thead>
               <tbody>
-                {paginatedItems.map((item) => (
+                {paginatedItems.map((item) => {
+                  const publicHref =
+                    item.status === "active" && item.slug
+                      ? kind === "airline"
+                        ? airlineDetailHref(item.slug)
+                        : airportDetailHref(item.slug)
+                      : null;
+
+                  return (
                   <tr key={item.id} className="border-b border-slate-100">
-                    <td className="font-semibold text-[#0b2f57]">{item.name}</td>
+                    <td className="font-semibold text-[#0b2f57]">
+                      {publicHref ? (
+                        <Link
+                          href={publicHref}
+                          target="_blank"
+                          className="transition hover:text-[#e30613]"
+                        >
+                          {item.name}
+                        </Link>
+                      ) : (
+                        item.name
+                      )}
+                    </td>
                     <td>{item.iata_code}</td>
                     {kind === "airport" ? <td>{(item as Airport).city}</td> : null}
                     <td>{item.country || "-"}</td>
                     <td className="max-w-[260px]">
-                      <p className="font-semibold text-[#0b2f57]">{item.seo_title}</p>
-                      <p className="mt-0.5 break-all text-[11px] text-slate-500">{item.page_url}</p>
+                      {publicHref ? (
+                        <Link
+                          href={publicHref}
+                          target="_blank"
+                          className="font-semibold text-[#0b2f57] transition hover:text-[#e30613]"
+                        >
+                          {item.seo_title}
+                        </Link>
+                      ) : (
+                        <p className="font-semibold text-[#0b2f57]">{item.seo_title}</p>
+                      )}
+                      {publicHref ? (
+                        <Link
+                          href={publicHref}
+                          target="_blank"
+                          className="mt-0.5 block break-all text-[11px] text-slate-500 transition hover:text-[#e30613]"
+                        >
+                          {item.page_url}
+                        </Link>
+                      ) : (
+                        <p className="mt-0.5 break-all text-[11px] text-slate-500">{item.page_url}</p>
+                      )}
                     </td>
                     <td>
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusStyle(item.status)}`}>
@@ -618,7 +660,8 @@ export function MasterEntityDashboard({
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
