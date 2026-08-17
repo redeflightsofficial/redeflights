@@ -6,14 +6,12 @@ import { clampMenuToViewport, lockBodyOverflowX } from "@/lib/overlay-position";
 
 export type PassengerCounts = {
   adults: number;
-  youngAdults: number;
   children: number;
   infants: number;
 };
 
 export const DEFAULT_PASSENGER_COUNTS: PassengerCounts = {
   adults: 1,
-  youngAdults: 0,
   children: 0,
   infants: 0,
 };
@@ -24,8 +22,7 @@ const CATEGORIES: {
   hint: string;
   min: number;
 }[] = [
-  { key: "adults", label: "Adults", hint: "16+ years", min: 1 },
-  { key: "youngAdults", label: "Young Adults", hint: "12–15 years", min: 0 },
+  { key: "adults", label: "Adults", hint: "12+ years", min: 1 },
   { key: "children", label: "Children", hint: "2–11 years", min: 0 },
   { key: "infants", label: "Infants", hint: "under 2 years", min: 0 },
 ];
@@ -34,11 +31,6 @@ export function formatPassengerSummary(counts: PassengerCounts) {
   const parts: string[] = [];
   if (counts.adults > 0) {
     parts.push(`${counts.adults} Adult${counts.adults === 1 ? "" : "s"}`);
-  }
-  if (counts.youngAdults > 0) {
-    parts.push(
-      `${counts.youngAdults} Young Adult${counts.youngAdults === 1 ? "" : "s"}`,
-    );
   }
   if (counts.children > 0) {
     parts.push(`${counts.children} Child${counts.children === 1 ? "" : "ren"}`);
@@ -50,7 +42,7 @@ export function formatPassengerSummary(counts: PassengerCounts) {
 }
 
 function totalPassengers(counts: PassengerCounts) {
-  return counts.adults + counts.youngAdults + counts.children + counts.infants;
+  return counts.adults + counts.children + counts.infants;
 }
 
 type PanelPosition = {
@@ -100,7 +92,7 @@ export function PassengerPicker({
         8,
       );
       const gap = 8;
-      const estimatedHeight = 380;
+      const estimatedHeight = 320;
       const spaceBelow = window.innerHeight - rect.bottom - 16;
       const openUp = spaceBelow < estimatedHeight && rect.top > spaceBelow;
 
@@ -167,10 +159,7 @@ export function PassengerPicker({
   }
 
   const isDefault =
-    value.adults === 1 &&
-    value.youngAdults === 0 &&
-    value.children === 0 &&
-    value.infants === 0;
+    value.adults === 1 && value.children === 0 && value.infants === 0;
 
   const panel =
     open && mounted && position

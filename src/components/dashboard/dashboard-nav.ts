@@ -89,6 +89,13 @@ export const dashboardNavSections: DashboardNavSection[] = [
         description: "Manual destinations + auto aggregation",
       },
       {
+        key: "umrah",
+        label: "Umrah",
+        href: "/dashboard/umrah",
+        icon: "package",
+        description: "Umrah packages with SEO from Dubai template",
+      },
+      {
         key: "hotels",
         label: "Hotels",
         href: "/dashboard/hotels",
@@ -143,6 +150,7 @@ export const dashboardQuickActions = [
   { label: "View Enquiries", href: "/dashboard/enquiries", icon: "file-text" as const },
   { label: "Add Flight Route", href: "/dashboard/flights", icon: "route" as const },
   { label: "Add Destination", href: "/dashboard/destinations", icon: "search" as const },
+  { label: "Add Umrah", href: "/dashboard/umrah", icon: "package" as const },
   { label: "Add Hotel", href: "/dashboard/hotels", icon: "hotel" as const },
   { label: "Add Visa", href: "/dashboard/visa", icon: "visa" as const },
   { label: "Add Package", href: "/dashboard/packages", icon: "package" as const },

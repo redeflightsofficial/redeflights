@@ -1,0 +1,37 @@
+import type { EntityStatus } from "@/types/airline";
+
+export type UmrahPackage = {
+  id: string;
+  package_code: string;
+  title: string;
+  departure_city: string;
+  destination: string;
+  hotel_category: string;
+  hotel_name: string;
+  nights: number;
+  airline: string;
+  price_aed: string;
+  visa_included: boolean;
+  transfer_included: boolean;
+  focus_keyword: string;
+  short_description: string;
+  long_description: string;
+  h2_heading: string;
+  image_url: string | null;
+  image_alt: string;
+  faqs: string[];
+  schema_description: string;
+  instagram_caption: string;
+  instagram_hashtags: string;
+  internal_links: string;
+  slug: string;
+  seo_title: string;
+  meta_description: string;
+  h1_heading: string;
+  page_url: string;
+  og_title: string;
+  og_description: string;
+  seo_keywords: string;
+  status: EntityStatus;
+  created_at: string;
+};

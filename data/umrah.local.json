@@ -1,0 +1,43 @@
+[
+  {
+    "id": "41abc4b5-b9d3-4b8c-bdf6-ef4781d350c1",
+    "package_code": "UMR05",
+    "title": "5 Nights Economy Umrah Package",
+    "departure_city": "Dubai",
+    "destination": "Makkah & Madinah",
+    "hotel_category": "3 Star",
+    "hotel_name": "TBD",
+    "nights": 5,
+    "airline": "Any",
+    "price_aed": "2499",
+    "visa_included": true,
+    "transfer_included": true,
+    "focus_keyword": "Umrah Package from Dubai",
+    "short_description": "Affordable Umrah package.",
+    "long_description": "Perform Umrah with hotel, visa assistance and transfers from Dubai.",
+    "h2_heading": "Affordable Umrah from Dubai",
+    "image_url": "https://images.unsplash.com/photo-1564769625905-50e93615e769?auto=format&fit=crop&w=1200&q=80",
+    "image_alt": "Pilgrims in Makkah",
+    "faqs": [
+      "What's included? Hotel, visa assistance and transfers.",
+      "Can families book? Yes.",
+      "Are flights included? As selected.",
+      "Is Ziyarat available? Optional.",
+      "How to book? Contact REDE FLIGHTS."
+    ],
+    "schema_description": "Umrah package schema",
+    "instagram_caption": "Begin your spiritual journey with REDE FLIGHTS.",
+    "instagram_hashtags": "#Umrah #Dubai #Makkah #Madinah #REDEFLIGHTS",
+    "internal_links": "/umrah",
+    "slug": "umrah-package-from-dubai-5-nights",
+    "seo_title": "5 Nights Umrah Package from Dubai | REDE FLIGHTS",
+    "meta_description": "Book a 5 nights Umrah package from Dubai with visa assistance, hotel and transfers.",
+    "h1_heading": "5 Nights Umrah Package from Dubai",
+    "page_url": "https://redeflights.ae/umrah/umrah-package-from-dubai-5-nights",
+    "og_title": "5 Nights Umrah Package",
+    "og_description": "Affordable Umrah from Dubai",
+    "seo_keywords": "Umrah Package from Dubai, umrah from dubai, umrah package, makkah madinah, rede flights umrah",
+    "status": "active",
+    "created_at": "2026-08-17T05:25:01.751Z"
+  }
+]

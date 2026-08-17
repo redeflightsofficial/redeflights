@@ -103,6 +103,12 @@ export const destinationsMetadata = createPageMetadata(
   "travel destinations, holiday destinations, world travel",
 );
 
+export const umrahMetadata = createPageMetadata(
+  "Umrah Packages",
+  "Book affordable Umrah packages from Dubai with hotel, visa assistance and transfers. Spiritual journeys curated by Redeflights.",
+  "umrah package from dubai, umrah dubai, makkah madinah package, umrah visa",
+);
+
 export const visaMetadata = createPageMetadata(
   "Visa Services",
   "Visa assistance for USA, UK, Schengen, Australia, New Zealand, Georgia and more. Tourist and business visas with document guidance from Redeflights, Ajman UAE.",

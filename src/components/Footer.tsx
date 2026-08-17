@@ -10,9 +10,13 @@ const quickLinks = [
   { label: "Hotels", href: "/hotels" },
   { label: "Tour Packages", href: "/packages" },
   { label: "Destinations", href: "/destinations" },
+  { label: "Umrah", href: "/umrah" },
 ];
 
-const serviceLinks = [{ label: "Visa Services", href: "/visa" }];
+const serviceLinks = [
+  { label: "Visa Services", href: "/visa" },
+  { label: "Umrah Packages", href: "/umrah" },
+];
 
 export function Footer() {
   return (

@@ -13,6 +13,7 @@ const navLinks = [
   { label: "Tour Packages", href: "/packages" },
   { label: "Visa", href: "/visa" },
   { label: "Destinations", href: "/destinations" },
+  { label: "Umrah", href: "/umrah" },
   { label: "About Us", href: "/about" },
   { label: "Contact Us", href: "/contact" },
 ];

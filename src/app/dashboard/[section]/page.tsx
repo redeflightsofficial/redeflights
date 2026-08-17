@@ -22,7 +22,7 @@ export function generateStaticParams() {
     .filter(
       (item) =>
         item.href !== "/dashboard" &&
-        !["enquiries", "banner-images", "settings", "routes", "flights", "airlines", "airports", "destinations", "hotels", "visa"].includes(item.key),
+        !["enquiries", "banner-images", "settings", "routes", "flights", "airlines", "airports", "destinations", "umrah", "hotels", "visa", "packages"].includes(item.key),
     )
     .map((item) => ({ section: item.key }));
 }
